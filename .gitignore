@@ -130,7 +130,9 @@ dmypy.json
 
 
 # My ignore
-dataloader/*
-!dataloader/dataloader_utils.py
-model/*
-!model/static_model_utils.py
+Code/dataloader/*
+!Code/dataloader/dataloader_utils.py
+Code/model/*
+!Code/model/static_model_utils.py
+Experiments/*
+!Experiments/gitkeep

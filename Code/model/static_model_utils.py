@@ -34,7 +34,7 @@ data_dir = "./data/hymenoptera_data"
 
 #%%
 
-def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_inception=False):
+def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_inception=False, regularization=None):
     since = time.time()
 
     val_acc_history = []
@@ -83,7 +83,15 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
                         loss = loss1 + 0.4*loss2
                     else:
                         outputs = model(inputs)
-                        loss = criterion(outputs, labels)
+                        reg_loss = 0
+                        reg_lambda = .001
+                        if regularization is not None:
+                            l1_penalty = torch.nn.L1Loss()
+                            for param in model.parameters():
+                                reg_loss += l1_penalty(param, torch.zeros(param.shape).to(device))            
+                        data_loss = criterion(outputs, labels)
+                        loss = data_loss + reg_lambda * reg_loss
+                        print("\t\tdata_loss: {:.3f}, reg_loss: {:.3f}".format(data_loss, reg_loss))
 
                     _, preds = torch.max(outputs, 1)
 
@@ -95,9 +103,8 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
-                # if not on_cuda:
-                    # break
-                print("*", end = '')
+                if not on_cuda:
+                    break
             print()
 
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
@@ -264,7 +271,7 @@ def print_model_parameters(model):
     print('Total learnable parameters: %d' %total_learnable_params)
     
     
-def plot_and_save(model, hist):
+def plot_and_save(models, hist, out_folder):
     (train_loss_history, train_acc_history, val_loss_history, val_acc_history) = hist
     
     plt.title("Accuracy vs. Number of Training Epochs")
@@ -275,7 +282,7 @@ def plot_and_save(model, hist):
     plt.plot(range(1,num_epochs+1),val_acc_history,label="val acc")
     plt.xticks(np.arange(1, num_epochs+1, 1.0))
     plt.legend()
-    plt.savefig('Experiments/Accuracy.jpg')
+    plt.savefig(out_folder+'Accuracy.jpg')
     plt.show()
     
     plt.title("Loss vs. Number of Training Epochs")
@@ -286,12 +293,12 @@ def plot_and_save(model, hist):
     plt.plot(range(1,num_epochs+1),val_loss_history,label="val loss")
     plt.xticks(np.arange(1, num_epochs+1, 1.0))
     plt.legend()
-    plt.savefig('Experiments/Loss.jpg')        
+    plt.savefig(out_folder+'Loss.jpg')        
     plt.show()
     
     (model_last, model_best) = models
-    torch.save(model_last, 'Experiments/model_last.pt')
-    torch.save(model_best, 'Experiments/model_best.pt')
+    torch.save(model_last, out_folder+'model_last.pt')
+    torch.save(model_best, out_folder+'model_best.pt')
 
 
 
