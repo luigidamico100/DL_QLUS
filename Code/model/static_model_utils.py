@@ -130,6 +130,7 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
        
     train_acc_history = [h.cpu().item() for h in train_acc_history]
     val_acc_history = [h.cpu().item() for h in val_acc_history]
+    test_acc_history = [h.cpu().item() for h in test_acc_history]
     hist = (train_loss_history, train_acc_history, val_loss_history, val_acc_history, test_loss_history, test_acc_history)
     models = (model_last, model_best)
     return models, hist

@@ -14,6 +14,7 @@ device = torch.device("cuda:0" if on_cuda else "cpu")
 DATASET_PATH = '/mnt/disk0/diego.gragnaniello/Eco/ICPR/Dataset_processato/Dataset_f' if on_cuda else '/Volumes/SD Card/ICPR/Dataset_processato/Dataset_f'
 num_workers = 0
 OUTFOLDER_PATH = '../Experiments/exp1/'
+MODEL_PATH = "../Experiments/Experiments_1/model_last.pt"
 
 
 ''' Problem definition parameters'''
