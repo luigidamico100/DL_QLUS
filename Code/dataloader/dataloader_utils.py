@@ -60,16 +60,6 @@ CV_FOLD = {'BEST': [[1, 2],
                    [63]]}
 
 
-# CV_FOLD = {'BEST': [[1, 2],
-#                     [3, 4, 21],
-#                     [5, 6]],
-#            'RDS': [[24, 33, 51],
-#                    [25, 38],
-#                    [26, 35, 49]],
-#            'TTN': [[54, 64],
-#                    [55],
-#                    [56]]}
-
 
 train_img_transform = lambda num_rows : A.Compose([
     #input: numpy[(H, W, C)]
@@ -79,7 +69,7 @@ train_img_transform = lambda num_rows : A.Compose([
     A.HorizontalFlip(p=0.5),
     A.Rotate(limit=10, p=1.0, border_mode=(cv2.BORDER_CONSTANT)),
     A.ColorJitter(.15, .15),
-    # A.RandomBrightnessContrast(p=0.2),
+    A.RandomBrightnessContrast(p=0.2),
     ToFloat(max_value=(255)),
     A.Normalize(mean = 0.1250, std = 0.1435, max_pixel_value=1.0),
     ToTensorV2(),
@@ -295,9 +285,9 @@ def get_mat_dataloaders(classes, basePath, target_value=False, replicate_minorit
     train_dl = DataLoader(ConcatDataset(train_ds), num_workers=num_workers, pin_memory=True,
                           shuffle=True, batch_size=batch_size)
     val_dl = DataLoader(ConcatDataset(val_ds), num_workers=num_workers, pin_memory=True,
-                        shuffle=False, batch_size=batch_size)    #batch_size=batch_size//5 originally
+                        shuffle=True, batch_size=batch_size)    #batch_size=batch_size//5 originally
     test_dl = DataLoader(ConcatDataset(test_ds), num_workers=num_workers, pin_memory=True,
-                         shuffle=False, batch_size=batch_size)   #batch_size=batch_size//5 originally
+                         shuffle=True, batch_size=batch_size)   #batch_size=batch_size//5 originally
     return train_dl, val_dl, test_dl, train_ds, val_ds, test_ds
 
 

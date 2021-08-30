@@ -29,7 +29,6 @@ from torch import nn
 on_cuda = torch.cuda.is_available()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print('Device: ', device)
-data_dir = "./data/hymenoptera_data"
 
 
 #%%
@@ -39,6 +38,8 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
 
     val_acc_history = []
     val_loss_history = []
+    test_acc_history = []
+    test_loss_history = []
     train_acc_history = []
     train_loss_history = []
         
@@ -51,7 +52,8 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
         print('-' * 10)
 
         # Each epoch has a training and validation phase
-        for phase in ['train', 'val']:
+        for phase in ['train', 'val', 'test']:
+            print("----- " + phase + "-----")
             if phase == 'train':
                 model.train()  # Set model to training mode
             else:
@@ -61,7 +63,8 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
             running_corrects = 0
 
             # Iterate over data.
-            for inputs, labels in dataloaders[phase]:
+            for batch_idx, (inputs, labels) in enumerate(dataloaders[phase]):
+                print("\tbatch_idx = {}".format(batch_idx), end='')
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
@@ -72,26 +75,16 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
                     # Get model outputs and calculate loss
-                    # Special case for inception because in training it has an auxiliary output. In train
-                    #   mode we calculate the loss by summing the final output and the auxiliary output
-                    #   but in testing we only consider the final output.
-                    if is_inception and phase == 'train':
-                        # From https://discuss.pytorch.org/t/how-to-optimize-inception-model-with-auxiliary-classifiers/7958
-                        outputs, aux_outputs = model(inputs)
-                        loss1 = criterion(outputs, labels)
-                        loss2 = criterion(aux_outputs, labels)
-                        loss = loss1 + 0.4*loss2
-                    else:
-                        outputs = model(inputs)
-                        reg_loss = 0
-                        reg_lambda = .001
-                        if regularization is not None:
-                            l1_penalty = torch.nn.L1Loss()
-                            for param in model.parameters():
-                                reg_loss += l1_penalty(param, torch.zeros(param.shape).to(device))            
-                        data_loss = criterion(outputs, labels)
-                        loss = data_loss + reg_lambda * reg_loss
-                        print("\t\tdata_loss: {:.3f}, reg_loss: {:.3f}".format(data_loss, reg_loss))
+                    outputs = model(inputs)
+                    reg_loss = 0
+                    reg_lambda = .001
+                    if regularization is not None:
+                        l1_penalty = torch.nn.L1Loss()
+                        for param in model.parameters():
+                            reg_loss += l1_penalty(param, torch.zeros(param.shape).to(device))            
+                    data_loss = criterion(outputs, labels)
+                    loss = data_loss + reg_lambda * reg_loss
+                    print("\t\tdata_loss: {:.3f}, reg_loss: {:.3f}".format(data_loss, reg_lambda*reg_loss))
 
                     _, preds = torch.max(outputs, 1)
 
@@ -103,14 +96,12 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
-                if not on_cuda:
-                    break
-            print()
+                if not on_cuda: break
 
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
             epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
 
-            print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
+            print('{} Loss: {:.4f} Acc: {:.4f}\n'.format(phase, epoch_loss, epoch_acc))
 
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
@@ -121,6 +112,9 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
             if phase == 'val':
                 val_acc_history.append(epoch_acc)
                 val_loss_history.append(epoch_loss)
+            elif phase == 'test':
+                test_acc_history.append(epoch_acc)
+                test_loss_history.append(epoch_loss)
             elif phase == 'train':
                 train_acc_history.append(epoch_acc)
                 train_loss_history.append(epoch_loss)
@@ -136,9 +130,33 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
        
     train_acc_history = [h.cpu().item() for h in train_acc_history]
     val_acc_history = [h.cpu().item() for h in val_acc_history]
-    hist = (train_loss_history, train_acc_history, val_loss_history, val_acc_history)
+    hist = (train_loss_history, train_acc_history, val_loss_history, val_acc_history, test_loss_history, test_acc_history)
     models = (model_last, model_best)
     return models, hist
+
+
+def eval_model(model, dataloader, num_batches=10):
+
+    model.eval()   # Set model to evaluate mode
+    running_corrects = 0
+    n_samples = 0
+    # Iterate over data.
+    for batch_idx, (inputs, labels) in enumerate(dataloader):
+        if batch_idx > num_batches:
+            break
+        print("*", end='')
+        inputs = inputs.to(device)
+        labels = labels.to(device)
+        outputs = model(inputs)
+        _, preds = torch.max(outputs, 1)
+        running_corrects += torch.sum(preds == labels.data)
+        n_samples += len(inputs)
+    #     print(batch_idx)
+    # print(len(inputs))
+    # print(batch_idx)
+    accuracy = running_corrects.double() / n_samples
+
+    return accuracy
 
 
 def set_parameter_requires_grad(model, feature_extracting):
@@ -271,34 +289,48 @@ def print_model_parameters(model):
     print('Total learnable parameters: %d' %total_learnable_params)
     
     
-def plot_and_save(models, hist, out_folder):
-    (train_loss_history, train_acc_history, val_loss_history, val_acc_history) = hist
+def plot_and_save(models, hist, out_folder, info_text):
+    if not os.path.exists(out_folder):
+        os.makedirs(out_folder)
     
-    plt.title("Accuracy vs. Number of Training Epochs")
-    plt.xlabel("Training Epochs")
-    plt.ylabel("Accuracy")
-    num_epochs = len(val_acc_history)
-    plt.plot(range(1,num_epochs+1),train_acc_history,label="test acc")
-    plt.plot(range(1,num_epochs+1),val_acc_history,label="val acc")
-    plt.xticks(np.arange(1, num_epochs+1, 1.0))
-    plt.legend()
-    plt.savefig(out_folder+'Accuracy.jpg')
-    plt.show()
-    
-    plt.title("Loss vs. Number of Training Epochs")
-    plt.xlabel("Training Epochs")
-    plt.ylabel("Loss")
-    num_epochs = len(val_acc_history)
-    plt.plot(range(1,num_epochs+1),train_loss_history,label="test loss")
-    plt.plot(range(1,num_epochs+1),val_loss_history,label="val loss")
-    plt.xticks(np.arange(1, num_epochs+1, 1.0))
-    plt.legend()
-    plt.savefig(out_folder+'Loss.jpg')        
-    plt.show()
-    
-    (model_last, model_best) = models
-    torch.save(model_last, out_folder+'model_last.pt')
-    torch.save(model_best, out_folder+'model_best.pt')
+        (train_loss_history, train_acc_history, val_loss_history, val_acc_history, test_loss_history, test_acc_history) = hist
+        
+        plt.title("Accuracy vs. Number of Training Epochs")
+        plt.xlabel("Training Epochs")
+        plt.ylabel("Accuracy")
+        num_epochs = len(val_acc_history)
+        plt.plot(range(1,num_epochs+1),train_acc_history,label="train acc")
+        plt.plot(range(1,num_epochs+1),val_acc_history,label="val acc")
+        plt.plot(range(1,num_epochs+1),test_acc_history,label="val acc")
+        plt.xticks(np.arange(1, num_epochs+1, 1.0))
+        plt.legend()
+        plt.savefig(out_folder+'Accuracy.jpg')
+        # plt.show()
+        plt.close()
+        
+        plt.title("Loss vs. Number of Training Epochs")
+        plt.xlabel("Training Epochs")
+        plt.ylabel("Loss")
+        num_epochs = len(val_acc_history)
+        plt.plot(range(1,num_epochs+1),train_loss_history,label="train loss")
+        plt.plot(range(1,num_epochs+1),val_loss_history,label="val loss")
+        plt.plot(range(1,num_epochs+1),test_loss_history,label="test loss")
+        plt.xticks(np.arange(1, num_epochs+1, 1.0))
+        plt.legend()
+        plt.savefig(out_folder+'Loss.jpg')        
+        # plt.show()
+        plt.close()
+        
+
+        
+        (model_last, model_best) = models
+        torch.save(model_last, out_folder+'model_last.pt')
+        torch.save(model_best, out_folder+'model_best.pt')
+        f = open(out_folder + "info.txt", "w")
+        f.write(info_text)
+        f.close()
+    else:
+        raise Exception('The output folder already exists: {}'.format(out_folder))
 
 
 
