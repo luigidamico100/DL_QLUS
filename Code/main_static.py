@@ -46,7 +46,7 @@ if __name__ == '__main__':
     
 
 #%% Train and evaluate
-
+    print("Output folder: {}\t\tcheck if  it does not exist!".format(OUTFOLDER_PATH))
     models, hist = stat_mod_ut.train_model(model_ft, dataloaders_dict, criterion, optimizer_ft, num_epochs=num_epochs, 
                                            is_inception=(model_name=="inception"), regularization=regularization)
 

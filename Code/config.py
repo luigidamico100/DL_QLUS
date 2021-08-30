@@ -13,8 +13,8 @@ on_cuda = torch.cuda.is_available()
 device = torch.device("cuda:0" if on_cuda else "cpu")
 DATASET_PATH = '/mnt/disk0/diego.gragnaniello/Eco/ICPR/Dataset_processato/Dataset_f' if on_cuda else '/Volumes/SD Card/ICPR/Dataset_processato/Dataset_f'
 num_workers = 0
-OUTFOLDER_PATH = '../Experiments/exp1/'
-MODEL_PATH = "../Experiments/Experiments_1/model_last.pt"
+OUTFOLDER_PATH = '../Experiments/exp2/'
+MODEL_PATH = "../Experiments/exp1/model_last.pt"
 
 
 ''' Problem definition parameters'''
@@ -33,7 +33,7 @@ feature_extract = False     #Set to False to fine-tune the model.
 
 
 ''' Training parameters'''
-fold_test = 0
+fold_test = 1
 num_epochs = 20 if on_cuda else 2
 batch_size = 64 if on_cuda else 2
 replicate_all_classes = 1
@@ -42,3 +42,4 @@ regularization = None
 
 
 info_text = "Binary classification \n\tfold_test = {}".format(fold_test)
+

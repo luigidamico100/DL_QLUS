@@ -302,7 +302,7 @@ def plot_and_save(models, hist, out_folder, info_text):
         num_epochs = len(val_acc_history)
         plt.plot(range(1,num_epochs+1),train_acc_history,label="train acc")
         plt.plot(range(1,num_epochs+1),val_acc_history,label="val acc")
-        plt.plot(range(1,num_epochs+1),test_acc_history,label="val acc")
+        plt.plot(range(1,num_epochs+1),test_acc_history,label="test acc")
         plt.xticks(np.arange(1, num_epochs+1, 1.0))
         plt.legend()
         plt.savefig(out_folder+'Accuracy.jpg')
@@ -321,8 +321,6 @@ def plot_and_save(models, hist, out_folder, info_text):
         plt.savefig(out_folder+'Loss.jpg')        
         # plt.show()
         plt.close()
-        
-
         
         (model_last, model_best) = models
         torch.save(model_last, out_folder+'model_last.pt')
