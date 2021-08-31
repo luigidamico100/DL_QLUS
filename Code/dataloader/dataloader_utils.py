@@ -21,9 +21,6 @@ import cv2
 
 NUM_ROWS = 224
 NUM_COLUMNS = 461
-# NUM_ROWS = 30
-# NUM_COLUMNS = 20
-# NUM_COLUMNS = 250
 NUM_FRAMES = 6
 
 all_classes = ['BEST', 'RDS', 'TTN']
@@ -72,6 +69,7 @@ train_img_transform = lambda num_rows : A.Compose([
     A.RandomBrightnessContrast(p=0.2),
     ToFloat(max_value=(255)),
     A.Normalize(mean = 0.1250, std = 0.1435, max_pixel_value=1.0),
+    #A.Normalize(mean = 0.5, std = 0.5, max_pixel_value=1.0),
     ToTensorV2(),
     #output: torch.Size([C, H, W])
 ])
