@@ -50,7 +50,7 @@ def plot_imgs(imgs, orig_img=None, row_title=None, **imshow_kwargs):
     plt.tight_layout()
 
 
-def prot_frames_from_dataloader(dataloader, num_batches=10):
+def plot_frames_from_dataloader(dataloader, num_batches=10):
     '''
     for dataloader obtained in mode 'random_frame_from_clip'
     Using dataloader means there output is the transformed version of the original input
@@ -96,18 +96,21 @@ def get_dataset_stats(dataloader):
     channel = 0
     
     train_dl_it = iter(dataloader)
-    batch = next(train_dl_it)[0]
-    data_w_channels = batch
-    data_wo_channels = batch[:,channel]
-    for batch in train_dl_it:
-        data_wo_channels = torch.cat((data_wo_channels, batch[0][:,channel]), dim=0)
-        data_w_channels = torch.cat((data_w_channels, batch[0]), dim=0)
+    batch = next(train_dl_it)
+    batch_x, batch_y = batch
+    data_w_channels = batch_x
+    data_wo_channels = batch_x[:,channel]
+    y = batch_y
+    for batch_x, batch_y in train_dl_it:
+        data_wo_channels = torch.cat((data_wo_channels, batch_x[:,channel]), dim=0)
+        data_w_channels = torch.cat((data_w_channels, batch_x), dim=0)
+        y = torch.cat((y, batch_y), dim=0)
     mean_w_channels = data_w_channels.mean()    #tensor(0.1250)
     mean_wo_channels= data_wo_channels.mean()   #tensor(0.1244)
     std_w_channels = data_w_channels.std()      #tensor(0.1435)
     std_wo_channels= data_wo_channels.std()     #tensor(0.1439)
     
-    return mean_w_channels, std_w_channels
+    return mean_w_channels, std_w_channels, y
 
 
 def inspect_dataset(dataset):
@@ -137,6 +140,14 @@ def get_stats_datasets_labels(datasets):
         print("mean for label %d: %.4f" %(idx, means[idx]))
     return means
 
+def get_stats_SF_value(dataloader):
+    y_values = []
+    for (_, batch_y) in dataloader:
+        
+        print(batch_y.shape)
+        
+    
+
 
 #%% dataset visualization
 prot_frames_from_dataloader(train_dl, num_batches=4)
@@ -153,6 +164,10 @@ inspect_dataset(train_ds[1])
 means = get_stats_datasets_labels(train_ds)
 
 
-
+#%%
+import matplotlib.pyplot as plt
+(_,_,y) = get_dataset_stats(train_dl)
+plt.hist(y, density=True)
+plt.kde(y)
 
 
