@@ -322,7 +322,7 @@ def plot_and_save(models, hist, out_folder, info_text):
         plt.plot(range(1,num_epochs+1),test_metric_history,label="test metric")
         plt.xticks(np.arange(1, num_epochs+1, 1.0))
         plt.legend()
-        plt.savefig(out_folder+'Accuracy.jpg')
+        plt.savefig(out_folder+'Metric_history.jpg')
         # plt.show()
         plt.close()
         
@@ -335,7 +335,7 @@ def plot_and_save(models, hist, out_folder, info_text):
         plt.plot(range(1,num_epochs+1),test_loss_history,label="test loss")
         plt.xticks(np.arange(1, num_epochs+1, 1.0))
         plt.legend()
-        plt.savefig(out_folder+'Loss.jpg')        
+        plt.savefig(out_folder+'Loss_history.jpg')        
         # plt.show()
         plt.close()
         
