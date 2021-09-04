@@ -11,21 +11,22 @@ from dataloader import dataloader_utils as dataload_ut
 import torch.optim as optim
 from config import model_name, num_classes, feature_extract, use_pretrained, classification
 from config import DATASET_PATH, num_workers, batch_size, mode, replicate_all_classes, fold_test
-from config import regularization, criterion, num_epochs, OUTFOLDER_PATH, info_text, classification_classes
+from config import regularization, num_epochs, OUTFOLDER_PATH, info_text
+from config import classification_classes, lr
+import config
 
 
 #%% MAIN
 if __name__ == '__main__':
-    
 
 #%% Set up model architecture
 
-    model_ft, input_size = stat_mod_ut.initialize_model(model_name, num_classes, feature_extract, use_pretrained=use_pretrained)
+    model_ft, _ = stat_mod_ut.initialize_model(model_name, classification, num_classes, feature_extract, use_pretrained=use_pretrained)
     # print(model_ft)
     # stat_mod_ut.print_model_parameters(model_ft)
     params_to_update = stat_mod_ut.get_params_to_update(model_ft, feature_extract)
     # optimizer_ft = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
-    optimizer_ft = optim.Adam(params_to_update, lr=1e-4)
+    optimizer_ft = optim.Adam(params_to_update, lr=lr)
 
 #%% Dataloaders
 
@@ -46,8 +47,10 @@ if __name__ == '__main__':
     
 
 #%% Train and evaluate
+    criterion, metric = config.get_problem_stuff()
+
     print("Output folder: {}\t\tcheck if  it does not exist!".format(OUTFOLDER_PATH))
-    models, hist = stat_mod_ut.train_model(model_ft, dataloaders_dict, criterion, optimizer_ft, num_epochs=num_epochs, 
+    models, hist = stat_mod_ut.train_model(model_ft, dataloaders_dict, criterion, metric, optimizer_ft, num_epochs=num_epochs, 
                                            is_inception=(model_name=="inception"), regularization=regularization)
 
 #%% 
