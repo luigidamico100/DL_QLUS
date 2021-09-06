@@ -67,7 +67,7 @@ if __name__ == '__main__':
                                                                                            batch_size=batch_size, mode=mode, replicate_all_classes=replicate_all_classes,
                                                                                            target_value=not classification)
             dataloaders_dict = {'train' : train_dl, 'val' : val_dl, 'test' : test_dl}
-            outfolder_path = '../Experiments/experiment_allfold/exp_fold{}/'.format(fold_test)
+            outfolder_path = '../Experiments/experiment_allfold/exp_fold_{}/'.format(fold_test)
             
     
             print("Output folder: {}\t\tBe sure that it does not exist!".format(outfolder_path))

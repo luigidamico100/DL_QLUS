@@ -22,6 +22,7 @@ import os
 import copy
 print("PyTorch Version: ",torch.__version__)
 print("Torchvision Version: ",torchvision.__version__)
+from torchmetrics import Accuracy, MeanAbsolutePercentageError
 
 from efficientnet_pytorch import EfficientNet
 from torch import nn
@@ -88,11 +89,11 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
                     # print('output shape: ', str(outputs.shape), ', label shape: ', str(labels.shape))
                     # print('output type: ', str(outputs.type()), ', label type: ', str(labels.type()))
                     data_loss = criterion(outputs, labels)
-                    data_metric = metric(outputs, labels)
+                    data_metric = metric(outputs, labels)   # batch metric mean
                     loss = data_loss + reg_lambda * reg_loss
                     print("\t\tdata_loss: {:.3f}, reg_loss: {:.3f}".format(data_loss, reg_lambda*reg_loss))
 
-                    _, preds = torch.max(outputs, 1)
+                    # _, preds = torch.max(outputs, 1)
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
@@ -151,12 +152,13 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
     return models, hist#, best_outputs, best_labels
 
 
-def eval_model(model, dataloader, num_batches=10):
+def eval_model(model, dataloader, metric, num_batches=10):
 
     model.eval()   # Set model to evaluate mode
-    running_corrects = 0
     n_samples = 0
+    running_metric = 0
     # Iterate over data.
+    # batch_idx, (inputs, labels) = next(iter(enumerate(dataloader)))
     for batch_idx, (inputs, labels) in enumerate(dataloader):
         if batch_idx > num_batches:
             break
@@ -164,15 +166,13 @@ def eval_model(model, dataloader, num_batches=10):
         inputs = inputs.to(device)
         labels = labels.to(device)
         outputs = model(inputs)
-        _, preds = torch.max(outputs, 1)
-        running_corrects += torch.sum(preds == labels.data)
+        batch_metric_mean = metric(outputs, labels)
+        running_metric += batch_metric_mean * inputs.size(0)
         n_samples += len(inputs)
-    #     print(batch_idx)
-    # print(len(inputs))
-    # print(batch_idx)
-    accuracy = running_corrects.double() / n_samples
-
-    return accuracy
+    metric = running_metric / n_samples
+    print()
+    
+    return metric
 
 
 def set_parameter_requires_grad(model, feature_extracting):
