@@ -66,7 +66,7 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
             # Iterate over data.
             for batch_idx, (inputs, labels) in enumerate(dataloaders[phase]):
                 #print("\tbatch_idx = {}".format(batch_idx), end='')
-                if not isinstance(criterion, nn.CrossEntropyLoss):
+                if not isinstance(criterion, nn.CrossEntropyLoss):  # If it is not the case of classification-problem
                     labels = labels.unsqueeze(dim=1).type(torch.FloatTensor)
                 # labels = labels.unsqueeze(dim=1)
                 inputs = inputs.to(device)
@@ -105,7 +105,7 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
                 running_metric += data_metric * inputs.size(0)
                 # running_corrects += torch.sum(preds == labels.data)
                 # running_corrects = torch.Tensor([1])
-                if not on_cuda: break
+                # if not on_cuda: break
 
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
             # epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
@@ -152,27 +152,30 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
     return models, hist#, best_outputs, best_labels
 
 
-def eval_model(model, dataloader, metric, num_batches=10):
+def eval_model(model, dataloader, score, metric, num_batches=10):
 
     model.eval()   # Set model to evaluate mode
     n_samples = 0
-    running_metric = 0
     # Iterate over data.
-    # batch_idx, (inputs, labels) = next(iter(enumerate(dataloader)))
+    batch_idx, (inputs, labels) = next(iter(enumerate(dataloader)))
+    # outputss = torch.empty(0, 
+    running_outputs = torch.tensor([])
+    running_labels = torch.tensor([])
     for batch_idx, (inputs, labels) in enumerate(dataloader):
-        if batch_idx > num_batches:
+        if batch_idx >= num_batches:
             break
         print("*", end='')
         inputs = inputs.to(device)
         labels = labels.to(device)
         outputs = model(inputs)
-        batch_metric_mean = metric(outputs, labels)
-        running_metric += batch_metric_mean * inputs.size(0)
+        running_outputs = torch.cat((running_outputs, outputs), dim=0)
+        running_labels = torch.cat((running_labels, labels), dim=0).type(torch.LongTensor)
         n_samples += len(inputs)
-    metric = running_metric / n_samples
+    metric = metric(running_outputs, running_labels)
+    score = score(running_outputs, running_labels)    
     print()
     
-    return metric
+    return score.item(), metric.item()
 
 
 def set_parameter_requires_grad(model, feature_extracting):
@@ -314,6 +317,8 @@ def plot_and_save(models, hist, out_folder, info_text):
     
         (loss_name), (train_loss_history, val_loss_history, test_loss_history) = hist[0]
         (metric_name), (train_metric_history, val_metric_history, test_metric_history) = hist[1]
+        
+        fig, axs = plt.subplots(2)
         
         plt.title("Metric vs. Number of Training Epochs")
         plt.xlabel("Training Epochs")
