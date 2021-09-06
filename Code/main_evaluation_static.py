@@ -32,9 +32,9 @@ if __name__ == '__main__':
     
     #%%
     
-    train_score, train_metric = stat_mod_ut.eval_model(model_eval, train_dl, loss, metric, num_batches=5)
+    train_score, train_metric, train_auc_score = stat_mod_ut.eval_model(model_eval, train_dl, loss, metric, num_batches=5)
     val_score, val_metric = stat_mod_ut.eval_model(model_eval, val_dl, loss, metric, num_batches=5)
-    test_score, test_metric = stat_mod_ut.eval_model(model_eval, test_dl, loss, metric, num_batches=15)
+    test_score, test_metric = stat_mod_ut.eval_model(model_eval, test_dl, loss, metric, num_batches=50)
 
 
 
