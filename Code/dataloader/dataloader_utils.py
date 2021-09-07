@@ -109,7 +109,7 @@ def default_mat_loader(path, num_rows=NUM_ROWS, return_value=False, mode='fixed_
     elif mode == 'entire_clip':
         data = [data[k][:num_rows] for k in data.keys() if k.startswith('f') and len(k) < 3]
         data = np.array(data)
-    elif mode == 'random_frame_from_clip':
+    elif mode == 'random_frame_from_clip' or mode == 'random_frame_from_clip_old':
         f = choice([k for k in data.keys() if k.startswith('f') and len(k) < 3])
         data = data[f][:num_rows]
     # print('\tloded mat shape: ', data.shape)
@@ -219,7 +219,7 @@ class LUSFolder(DatasetFolder):  # eredita da DatasetFolder
                 W = sample.shape[2]
                 sample = torch.reshape(sample, (T, C, H, W))
                 # print('\tsample transformed.shape = ', sample.shape)
-            elif self.mode == 'random_frame_from_clip':
+            elif self.mode == 'random_frame_from_clip' or self.mode == 'random_frame_from_clip_old':
                 sample = self.transform(image=sample)['image']
             
         if self.target_transform is not None:
@@ -250,7 +250,7 @@ def show_images(data_loader, batches=10):
 
 def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_minority_classes=True, fold_test=0, fold_val=None, batch_size=32, num_workers=4, replicate_all_classes=10, mode='fixed_number_of_frames',
                            train_samples=True, val_samples=True, test_samples=True):
-    print('---- Creating datasets and dataloaders -----')
+    print('---------- Creating datasets and dataloaders ----------')
     if fold_val is None: fold_val = fold_test - 1
     print('Validation fold:', fold_val, '\nTest fold:', fold_test)
     if len(classes) == 2 and all_classes[-1] in classes:
@@ -300,7 +300,7 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_mino
         for x, y in data:
             X += x
             Y += [y] * len(x)
-        return torch.stack(X), torch.Tensor(Y)
+        return torch.stack(X), torch.Tensor(Y).long()
 
     # data loader sulla concatenazione dei dataset delle singole classi
     train_dl, val_dl, test_dl = None, None, None
@@ -311,7 +311,7 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_mino
         
     if mode == 'random_frame_from_clip':
         collate = collate_fn
-        batch_size = math.ceil(batch_size/9)
+        batch_size = math.ceil(batch_size/16)
     else:
         collate = None
         
@@ -388,8 +388,8 @@ DATASET_PATH  = '/Volumes/SD Card/ICPR/Dataset_processato/Dataset_f'
 num_workers = 0
 fold_test = 0
 batch_size = 16
-# Mode to choose from [random_frame_from_clip, fixed_number_of_frames, fixed_number_of_frames_1ch]
-mode = 'fixed_number_of_frames_1ch'
+# Mode to choose from [random_frame_from_clip_old, random_frame_from_clip, fixed_number_of_frames, fixed_number_of_frames_1ch]
+mode = 'random_frame_from_clip_old'
 replicate_all_classes = 1
 classification = True
 

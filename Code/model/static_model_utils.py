@@ -65,6 +65,7 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
             running_metric = 0.0
 
             # Iterate over data.
+            n_samples = 0
             for batch_idx, (inputs, labels) in enumerate(dataloaders[phase]):
                 #print("\tbatch_idx = {}".format(batch_idx), end='')
                 if not isinstance(criterion, nn.CrossEntropyLoss):  # If it is not the case of classification-problem
@@ -104,13 +105,12 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
                 running_metric += data_metric * inputs.size(0)
-                # running_corrects += torch.sum(preds == labels.data)
-                # running_corrects = torch.Tensor([1])
+                n_samples += len(inputs)
                 if not on_cuda: break
 
-            epoch_loss = running_loss / len(dataloaders[phase].dataset)
+            epoch_loss = running_loss / n_samples
             # epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
-            epoch_metric = running_metric / len(dataloaders[phase].dataset)
+            epoch_metric = running_metric / n_samples
 
             print('\t\t{}: {:.4f},  {}: {:.4f}\n'.format(str(criterion), epoch_loss, str(metric), epoch_metric))
 
@@ -159,25 +159,35 @@ def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
     model.eval()   # Set model to evaluate mode
     n_samples = 0
     # batch_idx, (inputs, labels) = next(iter(enumerate(dataloader)))
-    running_outputs = torch.tensor([]).to(device)
-    running_labels = torch.tensor([]).long().to(device)
+    running_score = 0
+    running_metric = 0
     print("\t", end='')
     for batch_idx, (inputs, labels) in enumerate(dataloader):
         if batch_idx >= num_batches:
             break
+        print(inputs.shape)
+        print(labels.shape)
         inputs = inputs.to(device)
         labels = labels.long().to(device)
-        print("*", end='')
+        print("*--", end='')
         inputs = inputs.to(device)
+        print("*--", end='')
         labels = labels.to(device)
+        print("*--", end='')
         outputs = model(inputs)
-        running_outputs = torch.cat((running_outputs, outputs), dim=0)
-        running_labels = torch.cat((running_labels, labels), dim=0)#.type(torch.LongTensor)
+        print("*--", end='')
+        metric = metric_fn(outputs, labels)
+        score = score_fn(outputs, labels)
+        del outputs, labels
+        torch.cuda.empty_cache()
+        running_metric += metric * inputs.size(0)
+        running_score += score * inputs.size(0)
         n_samples += len(inputs)
+        print('fine batch')
     print()
     
-    metric = metric_fn(running_outputs, running_labels)
-    score = score_fn(running_outputs, running_labels)
+    metric_final = running_metric / n_samples
+    score_final = running_score / n_samples
     print('\t{}: {:.2f}, {}: {:.2f}\n'.format(str(score_fn), score, str(metric_fn), metric))
     
     ###### AUC - ROS metric ######
@@ -190,7 +200,7 @@ def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
     # auc_score = roc_auc_score(running_labels_array, probs_array[:,1])
     ##############################    
     
-    return n_samples, score.item(), metric.item() #, auc_score
+    return n_samples, score_final.item(), metric_final.item() #, auc_score
 
 
 def set_parameter_requires_grad(model, feature_extracting):
@@ -334,7 +344,6 @@ def plot_and_save(models, hist, out_folder, info_text):
         (metric_name), (train_metric_history, val_metric_history, test_metric_history) = hist[1]
         
         fig, axs = plt.subplots(2)
-        
         plt.title("Metric vs. Number of Training Epochs")
         plt.xlabel("Training Epochs")
         plt.ylabel(metric_name)
