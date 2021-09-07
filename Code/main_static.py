@@ -40,13 +40,12 @@ if __name__ == '__main__':
 
         stat_mod_ut.plot_and_save(models, hist, out_folder = outfolder_path, info_text=info_text)
     
-    else:    
+    else:
         for fold_test in fold_test_list:
-            print(fold_test)
             dataloaders_dict, _ = dataload_ut.get_mat_dataloaders(classification_classes, basePath=DATASET_PATH, num_workers=num_workers, fold_test=fold_test,
                                                                                            batch_size=batch_size, mode=mode, replicate_all_classes=replicate_all_classes,
                                                                                            target_value=not classification)
-            outfolder_path = '../Experiments/experiment_allfold/exp_fold_{}/'.format(fold_test)
+            outfolder_path = outfolder_allfold_folder + 'exp_fold_{}/'.format(fold_test)
             
     
             print("Output folder: {}\t\tBe sure that it does not exist!".format(outfolder_path))

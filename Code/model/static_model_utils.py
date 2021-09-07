@@ -155,13 +155,6 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
 
 def eval_model(model, dataloader, score, metric, num_batches=10):
 
-    # #Test stuff#####
-    # model = model_eval
-    # dataloader = train_dl
-    # num_batches = 10
-    # score = loss
-    # #########
-    
     model.eval()   # Set model to evaluate mode
     n_samples = 0
     # Iterate over data.
@@ -184,15 +177,17 @@ def eval_model(model, dataloader, score, metric, num_batches=10):
     metric = metric(running_outputs, running_labels)
     score = score(running_outputs, running_labels)    
 
-    running_labels_array = running_labels.numpy()
-    probs_array = (torch.softmax(running_outputs, dim=1)).detach().numpy()
-    fpr, tpr, thresholds = roc_curve(running_labels_array, probs_array[:,1])
-    plt.plot([0, 1], [0, 1], linestyle='--')
-    plt.plot(fpr, tpr)
-    plt.title('ROC curve'), plt.xlabel('False positive rate'), plt.ylabel('True positive rate'), plt.show()
-    auc_score = roc_auc_score(running_labels_array, probs_array[:,1])
-        
-    return score.item(), metric.item(), auc_score
+    ###### AUC - ROS metric ######
+    # running_labels_array = running_labels.numpy()
+    # probs_array = (torch.softmax(running_outputs, dim=1)).detach().numpy()
+    # fpr, tpr, thresholds = roc_curve(running_labels_array, probs_array[:,1])
+    # plt.plot([0, 1], [0, 1], linestyle='--')
+    # plt.plot(fpr, tpr)
+    # plt.title('ROC curve'), plt.xlabel('False positive rate'), plt.ylabel('True positive rate'), plt.show()
+    # auc_score = roc_auc_score(running_labels_array, probs_array[:,1])
+    ##############################    
+    
+    return n_samples, score.item(), metric.item() #, auc_score
 
 
 def set_parameter_requires_grad(model, feature_extracting):

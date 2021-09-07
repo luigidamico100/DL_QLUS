@@ -14,17 +14,20 @@ on_cuda = torch.cuda.is_available()
 device = torch.device("cuda:0" if on_cuda else "cpu")
 DATASET_PATH = '/mnt/disk0/diego.gragnaniello/Eco/ICPR/Dataset_processato/Dataset_f' if on_cuda else '/Volumes/SD Card/ICPR/Dataset_processato/Dataset_f'
 num_workers = 0
-OUTFOLDER_PATH = '../Experiments/exp6/'
-MODEL_PATH = "../Experiments/exp1/model_last.pt"
 
 
-''' Most common to edit'''
 experiment_all_fold = True
+''' Most common for training'''
 outfolder_path = '../Experiments/exp9/'
+outfolder_allfold_folder = '../Experiments/experiment_allfold_exp0/'
 comment_text = "classification problem runned with new loss and metrics"
 classification = True
 batch_size = 16 if on_cuda else 2
 comment_text = "...."
+
+''' Model evaluation '''
+MODEL_PATH = '../Experiments/experiment_allfold/exp_fold0/model_best.pt'
+ALLFOLD_MODELS_FOLDER = '../Experiments/experiment_allfold/'
 
 
 ''' Problem definition parameters'''

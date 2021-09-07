@@ -282,13 +282,13 @@ def get_mat_dataloaders(classes, basePath, target_value=False, replicate_minorit
     print('- creating data loaders')
     train_dl = DataLoader(ConcatDataset(train_ds), num_workers=num_workers, pin_memory=True,
                           shuffle=True, batch_size=batch_size)
-    print(' - Train num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in train_ds]) / batch_size))
+    print('\t- Train num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in train_ds]) / batch_size))
     val_dl = DataLoader(ConcatDataset(val_ds), num_workers=num_workers, pin_memory=True,
                         shuffle=True, batch_size=batch_size)    #batch_size=batch_size//5 originally
-    print(' - Val num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in val_ds]) / batch_size))
+    print('\t- Val num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in val_ds]) / batch_size))
     test_dl = DataLoader(ConcatDataset(test_ds), num_workers=num_workers, pin_memory=True,
                          shuffle=True, batch_size=batch_size)   #batch_size=batch_size//5 originally
-    print(' - Test num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in test_ds]) / batch_size))
+    print('\t- Test num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in test_ds]) / batch_size))
     
     dataloaders_dict = {'train' : train_dl, 'val' : val_dl, 'test' : test_dl}
     datasets_dict = {'train' : train_ds, 'val' : val_ds, 'test' : test_ds}
