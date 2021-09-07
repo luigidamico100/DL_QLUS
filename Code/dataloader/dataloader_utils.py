@@ -246,6 +246,71 @@ def show_images(data_loader, batches=10):
             break
 
 
+def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_minority_classes=True, fold_test=0, fold_val=None, batch_size=32, num_workers=4, replicate_all_classes=10, mode='entire_clip',
+                           train_samples=True, val_samples=True, test_samples=True):
+    print('---- Creating datasets and dataloaders -----')
+    if fold_val is None: fold_val = fold_test - 1
+    print('Validation fold:', fold_val, '\nTest fold:', fold_test)
+    if len(classes) == 2 and all_classes[-1] in classes:
+        Warning('Correggere le label del dataset!')
+
+    # creazione dataset per classe con selezione degli utenti
+    train_ds, val_ds, test_ds = [], [], []
+    for class_name in classes:
+        print('\t- creating data sets for class', class_name)
+        exclude_class = all_classes.copy()
+        exclude_class.remove(class_name)
+        
+        if train_samples:
+            train_ds.append(LUSFolder(root=basePath, train_phase=True, target_value=target_value, mode = mode, subset_out=CV_FOLD[class_name][fold_test] + CV_FOLD[class_name][fold_val],
+                                      exclude_class=exclude_class, num_rows=NUM_ROWS, exclude_val_higher=450 if not target_value and class_name != 'BEST' else None))
+            print('\t\t- TRAIN n. samples founded: ', len(train_ds[-1]))
+        if val_samples:
+            val_ds.append(LUSFolder(root=basePath, train_phase=False, target_value=target_value, mode = mode, subset_in=CV_FOLD[class_name][fold_val],
+                                    num_rows=NUM_ROWS, exclude_class=exclude_class, exclude_val_higher=450 if not target_value and class_name != 'BEST' else None))
+            print('\t\t- VAL n. samples founded: ', len(val_ds[-1]))
+        if test_samples:            
+            test_ds.append(LUSFolder(root=basePath, train_phase=False, target_value=target_value, mode = mode, subset_in=CV_FOLD[class_name][fold_test],
+                                     num_rows=NUM_ROWS, exclude_class=exclude_class, exclude_val_higher=450 if not target_value and class_name != 'BEST' else None))
+            print('\t\t- TEST n. samples founded: ', len(test_ds[-1]))            
+
+
+    # bilanciamento del numero di campioni delle classi ed eventuale replicazione di tutti i campioni
+    if train_samples and replicate_minority_classes:
+        print('\t- balancing data sets by sample duplications (replicate_all_classes=%d)' % replicate_all_classes)
+        print('\t  - before:', [len(_) for _ in train_ds])
+        train_ds = balance_datasets(train_ds)
+        print('\t  - after:', [len(_) for _ in train_ds])
+    if train_samples and replicate_all_classes > 1:
+        print('\t- replicating train data sets by sample duplications %d times' % replicate_all_classes)
+        print('\t  - before:', [len(_) for _ in train_ds])
+        train_ds = replicate_datasets(train_ds, replicate_all_classes)
+        print('\t  - after:', [len(_) for _ in train_ds])
+
+    # data loader sulla concatenazione dei dataset delle singole classi
+    train_dl, val_dl, test_dl = None, None, None
+    if train_samples:
+        train_dl = DataLoader(ConcatDataset(train_ds), num_workers=num_workers, pin_memory=True,
+                              shuffle=True, batch_size=batch_size)
+        print('\t- Train num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in train_ds]) / batch_size))
+        
+    if val_samples:
+        val_dl = DataLoader(ConcatDataset(val_ds), num_workers=num_workers, pin_memory=True,
+                            shuffle=True, batch_size=batch_size)    #batch_size=batch_size//5 originally
+        print('\t- Val num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in val_ds]) / batch_size))
+        
+    if test_samples:
+        test_dl = DataLoader(ConcatDataset(test_ds), num_workers=num_workers, pin_memory=True,
+                             shuffle=True, batch_size=batch_size)   #batch_size=batch_size//5 originally
+        print('\t- Test num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in test_ds]) / batch_size))
+    print('\n')
+    dataloaders_dict = {'train' : train_dl, 'val' : val_dl, 'test' : test_dl}
+    datasets_dict = {'train' : train_ds, 'val' : val_ds, 'test' : test_ds}
+    
+    return dataloaders_dict, datasets_dict
+
+
+
 def get_mat_dataloaders(classes, basePath, target_value=False, replicate_minority_classes=True, fold_test=0, fold_val=None, batch_size=32, num_workers=4, replicate_all_classes=10, mode='entire_clip'):
     if fold_val is None: fold_val = fold_test - 1
     print('Validation fold:', fold_val, '\nTest fold:', fold_test)
@@ -273,7 +338,7 @@ def get_mat_dataloaders(classes, basePath, target_value=False, replicate_minorit
         train_ds = balance_datasets(train_ds)
         print('  - after:', [len(_) for _ in train_ds])
     if replicate_all_classes > 1:
-        print('- replicating data sets by sample duplications %d times' % replicate_all_classes)
+        print('- replicating train data sets by sample duplications %d times' % replicate_all_classes)
         print('  - before:', [len(_) for _ in train_ds])
         train_ds = replicate_datasets(train_ds, replicate_all_classes)
         print('  - after:', [len(_) for _ in train_ds])
@@ -282,10 +347,17 @@ def get_mat_dataloaders(classes, basePath, target_value=False, replicate_minorit
     print('- creating data loaders')
     train_dl = DataLoader(ConcatDataset(train_ds), num_workers=num_workers, pin_memory=True,
                           shuffle=True, batch_size=batch_size)
+    print('\t- Train num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in train_ds]) / batch_size))
     val_dl = DataLoader(ConcatDataset(val_ds), num_workers=num_workers, pin_memory=True,
                         shuffle=True, batch_size=batch_size)    #batch_size=batch_size//5 originally
+    print('\t- Val num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in val_ds]) / batch_size))
     test_dl = DataLoader(ConcatDataset(test_ds), num_workers=num_workers, pin_memory=True,
                          shuffle=True, batch_size=batch_size)   #batch_size=batch_size//5 originally
-    return train_dl, val_dl, test_dl, train_ds, val_ds, test_ds
+    print('\t- Test num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in test_ds]) / batch_size))
+    
+    dataloaders_dict = {'train' : train_dl, 'val' : val_dl, 'test' : test_dl}
+    datasets_dict = {'train' : train_ds, 'val' : val_ds, 'test' : test_ds}
+    
+    return dataloaders_dict, datasets_dict
 
 

@@ -22,6 +22,7 @@ import os
 import copy
 print("PyTorch Version: ",torch.__version__)
 print("Torchvision Version: ",torchvision.__version__)
+from torchmetrics import Accuracy, MeanAbsolutePercentageError
 
 from efficientnet_pytorch import EfficientNet
 from torch import nn
@@ -29,6 +30,7 @@ from torch import nn
 on_cuda = torch.cuda.is_available()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print('Device: ', device)
+from sklearn.metrics import roc_curve, roc_auc_score
 
 
 #%%
@@ -65,7 +67,7 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
             # Iterate over data.
             for batch_idx, (inputs, labels) in enumerate(dataloaders[phase]):
                 #print("\tbatch_idx = {}".format(batch_idx), end='')
-                if not isinstance(criterion, nn.CrossEntropyLoss):
+                if not isinstance(criterion, nn.CrossEntropyLoss):  # If it is not the case of classification-problem
                     labels = labels.unsqueeze(dim=1).type(torch.FloatTensor)
                 # labels = labels.unsqueeze(dim=1)
                 inputs = inputs.to(device)
@@ -88,11 +90,11 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
                     # print('output shape: ', str(outputs.shape), ', label shape: ', str(labels.shape))
                     # print('output type: ', str(outputs.type()), ', label type: ', str(labels.type()))
                     data_loss = criterion(outputs, labels)
-                    data_metric = metric(outputs, labels)
+                    data_metric = metric(outputs, labels)   # batch metric mean
                     loss = data_loss + reg_lambda * reg_loss
                     print("\t\tdata_loss: {:.3f}, reg_loss: {:.3f}".format(data_loss, reg_lambda*reg_loss))
 
-                    _, preds = torch.max(outputs, 1)
+                    # _, preds = torch.max(outputs, 1)
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
@@ -116,6 +118,8 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
             if phase == 'val' and epoch_loss < best_loss:
                 best_loss = epoch_loss
                 best_model_wts = copy.deepcopy(model.state_dict())
+                # best_outputs = outputs
+                # best_labels = labels
             if phase == 'val' and epoch == num_epochs-1:
                 last_model_wts = copy.deepcopy(model.state_dict())
             if phase == 'val':
@@ -130,7 +134,7 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
                 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
-    print('Best validation Metric: {:4f}'.format(best_loss))
+    print('Best validation {}: {:4f}'.format(str(criterion), best_loss))
 
     model_best = model
     model_best.load_state_dict(best_model_wts)
@@ -146,31 +150,47 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
     hist[1] = ((str(metric)),(train_metric_history, val_metric_history, test_metric_history))
     
     models = (model_last, model_best)
-    return models, hist
+    return models, hist#, best_outputs, best_labels
 
 
-def eval_model(model, dataloader, num_batches=10):
-
+def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
+    
+    print('---- Evaluating the model -----')
     model.eval()   # Set model to evaluate mode
-    running_corrects = 0
     n_samples = 0
-    # Iterate over data.
+    # batch_idx, (inputs, labels) = next(iter(enumerate(dataloader)))
+    running_outputs = torch.tensor([]).to(device)
+    running_labels = torch.tensor([]).long().to(device)
+    print("\t", end='')
     for batch_idx, (inputs, labels) in enumerate(dataloader):
-        if batch_idx > num_batches:
+        if batch_idx >= num_batches:
             break
+        inputs = inputs.to(device)
+        labels = labels.long().to(device)
         print("*", end='')
         inputs = inputs.to(device)
         labels = labels.to(device)
         outputs = model(inputs)
-        _, preds = torch.max(outputs, 1)
-        running_corrects += torch.sum(preds == labels.data)
+        running_outputs = torch.cat((running_outputs, outputs), dim=0)
+        running_labels = torch.cat((running_labels, labels), dim=0)#.type(torch.LongTensor)
         n_samples += len(inputs)
-    #     print(batch_idx)
-    # print(len(inputs))
-    # print(batch_idx)
-    accuracy = running_corrects.double() / n_samples
-
-    return accuracy
+    print()
+    
+    metric = metric_fn(running_outputs, running_labels)
+    score = score_fn(running_outputs, running_labels)
+    print('\t{}: {:.2f}, {}: {:.2f}\n'.format(str(score_fn), score, str(metric_fn), metric))
+    
+    ###### AUC - ROS metric ######
+    # running_labels_array = running_labels.numpy()
+    # probs_array = (torch.softmax(running_outputs, dim=1)).detach().numpy()
+    # fpr, tpr, thresholds = roc_curve(running_labels_array, probs_array[:,1])
+    # plt.plot([0, 1], [0, 1], linestyle='--')
+    # plt.plot(fpr, tpr)
+    # plt.title('ROC curve'), plt.xlabel('False positive rate'), plt.ylabel('True positive rate'), plt.show()
+    # auc_score = roc_auc_score(running_labels_array, probs_array[:,1])
+    ##############################    
+    
+    return n_samples, score.item(), metric.item() #, auc_score
 
 
 def set_parameter_requires_grad(model, feature_extracting):
@@ -312,6 +332,8 @@ def plot_and_save(models, hist, out_folder, info_text):
     
         (loss_name), (train_loss_history, val_loss_history, test_loss_history) = hist[0]
         (metric_name), (train_metric_history, val_metric_history, test_metric_history) = hist[1]
+        
+        fig, axs = plt.subplots(2)
         
         plt.title("Metric vs. Number of Training Epochs")
         plt.xlabel("Training Epochs")

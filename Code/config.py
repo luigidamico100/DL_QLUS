@@ -10,21 +10,24 @@ import torch
 from torch import nn
 from torchmetrics import Accuracy, MeanAbsolutePercentageError
 
-
 on_cuda = torch.cuda.is_available()
 device = torch.device("cuda:0" if on_cuda else "cpu")
 DATASET_PATH = '/mnt/disk0/diego.gragnaniello/Eco/ICPR/Dataset_processato/Dataset_f' if on_cuda else '/Volumes/SD Card/ICPR/Dataset_processato/Dataset_f'
 num_workers = 0
-MODEL_PATH = "../Experiments/exp1/model_last.pt"
 
 
-
-''' Most common to edit'''
-OUTFOLDER_PATH = '../Experiments/exp9/'
+experiment_all_fold = True
+''' Most common for training'''
+outfolder_path = '../Experiments/exp9/'
+outfolder_allfold_folder = '../Experiments/experiment_allfold_exp0/'
 comment_text = "classification problem runned with new loss and metrics"
 classification = True
-batch_size = 16 if on_cuda else 32
+batch_size = 16 if on_cuda else 2
+comment_text = "...."
 
+''' Model evaluation '''
+MODEL_PATH = '../Experiments/experiment_allfold/exp_fold0/model_best.pt'
+ALLFOLD_MODELS_FOLDER = '../Experiments/experiment_allfold/'
 
 
 ''' Problem definition parameters'''
@@ -40,20 +43,16 @@ feature_extract = False     #Set to False to fine-tune the model.
 
 
 ''' Training parameters'''
+fold_test_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 fold_test = 9
-num_epochs = 20 if on_cuda else 2
+num_epochs = 20 if on_cuda else 1
 replicate_all_classes = 1
 regularization = None
 lr = 1e-4
 
-''' classification or regression parameters'''
-
 #for classification problem
 classification_classes = ['BEST', 'RDS']
 num_classes = len(classification_classes)
-
-
-
 
 def get_problem_stuff():
     if classification:
@@ -64,9 +63,5 @@ def get_problem_stuff():
         metric = MeanAbsolutePercentageError().to(device)
     return (criterion, metric)
 
-info_text = "Classification: {} \nModel name: {}\n\tfold_test = {}\n{}".format(classification, model_name, fold_test, comment_text)
 
-
-
-
-
+info_text = "Model name: {}\nClassification = {}\n\tfold_test = {}\nBatch size = {}\n{}".format(model_name, classification, fold_test, batch_size, comment_text)
