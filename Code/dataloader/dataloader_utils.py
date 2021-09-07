@@ -16,7 +16,7 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from albumentations.augmentations.transforms import ToFloat
 import cv2
-
+import math
 
 
 #%%
@@ -90,23 +90,26 @@ test_img_transform = lambda num_rows : A.Compose([
 
 #%% Functions
 
-def default_mat_loader(path, num_rows=NUM_ROWS, return_value=False, mode='entire_clip'):
+def default_mat_loader(path, num_rows=NUM_ROWS, return_value=False, mode='fixed_number_of_frames'):
 
     data = loadmat(path)
     if return_value:
         valore = data['valore']
         
-    if mode=='entire_clip':
+    if mode == 'fixed_number_of_frames':
         data = [data[k][:num_rows] for k in data.keys() if k.startswith('f') and len(k) < 3]
         data = data[:NUM_FRAMES]
         data = np.array(data)
-    elif mode=='entire_clip_1ch':
+    elif mode == 'fixed_number_of_frames_1ch':
         data = [data[k][:num_rows] for k in data.keys() if k.startswith('f') and len(k) < 3]
         data = data[:NUM_FRAMES]
         data = np.array(data)
         data = np.delete(data, 0, 3)
         data = np.delete(data, 0, 3)
-    elif mode=='random_frame_from_clip':
+    elif mode == 'entire_clip':
+        data = [data[k][:num_rows] for k in data.keys() if k.startswith('f') and len(k) < 3]
+        data = np.array(data)
+    elif mode == 'random_frame_from_clip':
         f = choice([k for k in data.keys() if k.startswith('f') and len(k) < 3])
         data = data[f][:num_rows]
     # print('\tloded mat shape: ', data.shape)
@@ -142,16 +145,14 @@ class BalanceConcatDataset(ConcatDataset):
 
 
 class LUSFolder(DatasetFolder):  # eredita da DatasetFolder
-    def __init__(self, root, train_phase, target_value=False, mode='entire_clip', subset_in=None, subset_out=None, num_rows=224,
+    def __init__(self, root, train_phase, target_value=False, mode='fixed_number_of_frames', subset_in=None, subset_out=None, num_rows=224,
                  subset_var='paziente', exclude_class=None, exclude_val_higher=None, random_seed=0, loader=None):
         seed(random_seed)
         self.target_value = target_value
         self.mode = mode
 
-        # if mode == 'random_frame_from_clip':
         self.transform = train_img_transform(num_rows) if train_phase else test_img_transform(num_rows)
-        # elif mode == 'entire_clip':
-            # self.transform = train_clip_transform(num_rows) if train_phase else test_clip_transform(num_rows)
+
         if loader is None:
             if train_phase:
                 loader = lambda path: default_mat_loader(path, num_rows, return_value=target_value, mode=mode)
@@ -206,7 +207,7 @@ class LUSFolder(DatasetFolder):  # eredita da DatasetFolder
         # target = torch.tensor(target).type(torch.LongTensor)
         if self.transform is not None:
             # print('\tsample.shape = ', sample.shape)
-            if self.mode == 'entire_clip' or self.mode == 'entire_clip_1ch':
+            if self.mode=='entire_clip' or self.mode == 'fixed_number_of_frames' or self.mode == 'fixed_number_of_frames_1ch':
                 sample = sample.transpose(1,2,0,3)
                 H = sample.shape[0]
                 W = sample.shape[1]
@@ -247,7 +248,7 @@ def show_images(data_loader, batches=10):
             break
 
 
-def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_minority_classes=True, fold_test=0, fold_val=None, batch_size=32, num_workers=4, replicate_all_classes=10, mode='entire_clip',
+def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_minority_classes=True, fold_test=0, fold_val=None, batch_size=32, num_workers=4, replicate_all_classes=10, mode='fixed_number_of_frames',
                            train_samples=True, val_samples=True, test_samples=True):
     print('---- Creating datasets and dataloaders -----')
     if fold_val is None: fold_val = fold_test - 1
@@ -308,14 +309,20 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_mino
                               shuffle=True, batch_size=batch_size)
         print('\t- Train num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in train_ds]) / batch_size))
         
+    if mode == 'random_frame_from_clip':
+        collate = collate_fn
+        batch_size = math.ceil(batch_size/9)
+    else:
+        collate = None
+        
     if val_samples:
         val_dl = DataLoader(ConcatDataset(val_ds), num_workers=num_workers, pin_memory=True,
-                            shuffle=True, batch_size=batch_size, collate_fn=collate_fn if mode == 'random_frame_from_clip' else None)    #batch_size=batch_size//5 originally
+                            shuffle=True, batch_size=batch_size, collate_fn=collate)
         print('\t- Val num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in val_ds]) / batch_size))
         
     if test_samples:
         test_dl = DataLoader(ConcatDataset(test_ds), num_workers=num_workers, pin_memory=True,
-                             shuffle=True, batch_size=batch_size, collate_fn=collate_fn if mode == 'random_frame_from_clip' else None)   #batch_size=batch_size//5 originally
+                             shuffle=True, batch_size=batch_size, collate_fn=collate) 
         print('\t- Test num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in test_ds]) / batch_size))
     print('\n')
     dataloaders_dict = {'train' : train_dl, 'val' : val_dl, 'test' : test_dl}
@@ -325,7 +332,7 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_mino
 
 
 
-def get_mat_dataloaders(classes, basePath, target_value=False, replicate_minority_classes=True, fold_test=0, fold_val=None, batch_size=32, num_workers=4, replicate_all_classes=10, mode='entire_clip'):
+def get_mat_dataloaders(classes, basePath, target_value=False, replicate_minority_classes=True, fold_test=0, fold_val=None, batch_size=32, num_workers=4, replicate_all_classes=10, mode='fixed_number_of_frames'):
     if fold_val is None: fold_val = fold_test - 1
     print('Validation fold:', fold_val, '\nTest fold:', fold_test)
     if len(classes) == 2 and all_classes[-1] in classes:
@@ -380,9 +387,9 @@ classification_classes = ['BEST', 'RDS']
 DATASET_PATH  = '/Volumes/SD Card/ICPR/Dataset_processato/Dataset_f'
 num_workers = 0
 fold_test = 0
-batch_size = 4
-# Mode to choose from [random_frame_from_clip, entire_clip, entire_clip_1ch]
-mode = 'entire_clip'
+batch_size = 16
+# Mode to choose from [random_frame_from_clip, fixed_number_of_frames, fixed_number_of_frames_1ch]
+mode = 'fixed_number_of_frames_1ch'
 replicate_all_classes = 1
 classification = True
 
@@ -401,27 +408,26 @@ if __name__ == '__main__':
     val_dl = dataloaders_dict['val']
     val_it = iter(val_dl)
     val_get = next(val_it)
+    print(val_get[0].shape)
     
     train_dl = dataloaders_dict['train']
     train_it = iter(train_dl)
     train_get = next(train_it)
+    print(train_get[0].shape)
     
     val_dl = dataloaders_dict['val']
     val_it = iter(val_dl)
     val_get = next(val_it)
+    print(val_get[0].shape)
     
     test_dl = dataloaders_dict['test']
     test_it = iter(test_dl)
     test_get = next(test_it)
-    
+    print(test_get[0].shape)
     
     # train_dl, val_dl, test_dl = dataloaders_dict['train'], dataloaders_dict['val'], dataloaders_dict['test']
     # train_it, val_it, test_it = iter(train_dl), iter(val_dl), iter(test_dl)
     # train_get, val_get, test_get = next(train_it), next(val_it), next(test_it)
-    
-    
-    
-    
     
     
 
