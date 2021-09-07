@@ -153,30 +153,33 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
     return models, hist#, best_outputs, best_labels
 
 
-def eval_model(model, dataloader, score, metric, num_batches=10):
-
+def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
+    
+    print('---- Evaluating the model -----')
     model.eval()   # Set model to evaluate mode
     n_samples = 0
-    # Iterate over data.
-    batch_idx, (inputs, labels) = next(iter(enumerate(dataloader)))
-    # outputss = torch.empty(0, 
-    running_outputs = torch.tensor([])
-    running_labels = torch.tensor([])
+    # batch_idx, (inputs, labels) = next(iter(enumerate(dataloader)))
+    running_outputs = torch.tensor([]).to(device)
+    running_labels = torch.tensor([]).long().to(device)
+    print("\t", end='')
     for batch_idx, (inputs, labels) in enumerate(dataloader):
         if batch_idx >= num_batches:
             break
+        inputs = inputs.to(device)
+        labels = labels.long().to(device)
         print("*", end='')
         inputs = inputs.to(device)
         labels = labels.to(device)
         outputs = model(inputs)
         running_outputs = torch.cat((running_outputs, outputs), dim=0)
-        running_labels = torch.cat((running_labels, labels), dim=0).type(torch.LongTensor)
+        running_labels = torch.cat((running_labels, labels), dim=0)#.type(torch.LongTensor)
         n_samples += len(inputs)
     print()
     
-    metric = metric(running_outputs, running_labels)
-    score = score(running_outputs, running_labels)    
-
+    metric = metric_fn(running_outputs, running_labels)
+    score = score_fn(running_outputs, running_labels)
+    print('\t{}: {:.2f}, {}: {:.2f}\n'.format(str(score_fn), score, str(metric_fn), metric))
+    
     ###### AUC - ROS metric ######
     # running_labels_array = running_labels.numpy()
     # probs_array = (torch.softmax(running_outputs, dim=1)).detach().numpy()
