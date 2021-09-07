@@ -109,7 +109,6 @@ def default_mat_loader(path, num_rows=NUM_ROWS, return_value=False, mode='entire
     elif mode=='random_frame_from_clip':
         f = choice([k for k in data.keys() if k.startswith('f') and len(k) < 3])
         data = data[f][:num_rows]
-        
     # print('\tloded mat shape: ', data.shape)
 
     if return_value:
@@ -136,7 +135,7 @@ def replicate_datasets(datasets, increase_factor=0):
     return datasets
 
 
-class BalanceConcatDataset(ConcatDataset):  # eredita da ConcatDataset
+class BalanceConcatDataset(ConcatDataset):
     def __init__(self, datasets):
         datasets = balance_datasets(datasets)
         super(BalanceConcatDataset, self).__init__(datasets)
@@ -149,7 +148,6 @@ class LUSFolder(DatasetFolder):  # eredita da DatasetFolder
         self.target_value = target_value
         self.mode = mode
 
-        # definisce le trasformazioni da effettuare
         # if mode == 'random_frame_from_clip':
         self.transform = train_img_transform(num_rows) if train_phase else test_img_transform(num_rows)
         # elif mode == 'entire_clip':
@@ -158,7 +156,7 @@ class LUSFolder(DatasetFolder):  # eredita da DatasetFolder
             if train_phase:
                 loader = lambda path: default_mat_loader(path, num_rows, return_value=target_value, mode=mode)
             else:
-                loader = lambda path: default_mat_loader(path, num_rows, return_value=target_value, mode=mode)  #This should be always mode = 'entire_clip'
+                loader = lambda path: default_mat_loader(path, num_rows, return_value=target_value, mode=mode)
         # definisce la funzione che seleziona i file in base a subset_in e subset_out
         assert subset_in is None or subset_out is None  # almeno uno dei due deve essere None
         if subset_in is not None:
@@ -187,7 +185,6 @@ class LUSFolder(DatasetFolder):  # eredita da DatasetFolder
                 is_valid_fun = lambda path: path.endswith('.mat') and (exclude_class is None or all([e not in path for e in exclude_class])) \
                                             and loadmat(path, variable_names='valore')['valore'] < exclude_val_higher
 
-        # costruttore
         super(LUSFolder, self).__init__(root=root, loader=loader, extensions=None,
                                         transform=self.transform, target_transform=None, is_valid_file=is_valid_fun)
         self.imgs = self.samples
@@ -266,15 +263,19 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_mino
         exclude_class.remove(class_name)
         
         if train_samples:
-            train_ds.append(LUSFolder(root=basePath, train_phase=True, target_value=target_value, mode = mode, subset_out=CV_FOLD[class_name][fold_test] + CV_FOLD[class_name][fold_val],
+            train_ds.append(LUSFolder(root=basePath, train_phase=True, target_value=target_value, mode=mode, subset_out=CV_FOLD[class_name][fold_test] + CV_FOLD[class_name][fold_val],
                                       exclude_class=exclude_class, num_rows=NUM_ROWS, exclude_val_higher=450 if not target_value and class_name != 'BEST' else None))
             print('\t\t- TRAIN n. samples founded: ', len(train_ds[-1]))
+            
+        mode_test = 'entire_clip' if mode=='random_frame_from_clip' else mode
+        
         if val_samples:
-            val_ds.append(LUSFolder(root=basePath, train_phase=False, target_value=target_value, mode = mode, subset_in=CV_FOLD[class_name][fold_val],
+            val_ds.append(LUSFolder(root=basePath, train_phase=False, target_value=target_value, mode=mode_test, subset_in=CV_FOLD[class_name][fold_val],
                                     num_rows=NUM_ROWS, exclude_class=exclude_class, exclude_val_higher=450 if not target_value and class_name != 'BEST' else None))
             print('\t\t- VAL n. samples founded: ', len(val_ds[-1]))
+            
         if test_samples:            
-            test_ds.append(LUSFolder(root=basePath, train_phase=False, target_value=target_value, mode = mode, subset_in=CV_FOLD[class_name][fold_test],
+            test_ds.append(LUSFolder(root=basePath, train_phase=False, target_value=target_value, mode=mode_test, subset_in=CV_FOLD[class_name][fold_test],
                                      num_rows=NUM_ROWS, exclude_class=exclude_class, exclude_val_higher=450 if not target_value and class_name != 'BEST' else None))
             print('\t\t- TEST n. samples founded: ', len(test_ds[-1]))            
 
@@ -299,7 +300,6 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_mino
             X += x
             Y += [y] * len(x)
         return torch.stack(X), torch.Tensor(Y)
-    # data è una lista di 4 elem (num batch). Ogni elemento è una tupla (Tensor ([6, 3, 224, 461]) , label)
 
     # data loader sulla concatenazione dei dataset delle singole classi
     train_dl, val_dl, test_dl = None, None, None
@@ -310,12 +310,12 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_mino
         
     if val_samples:
         val_dl = DataLoader(ConcatDataset(val_ds), num_workers=num_workers, pin_memory=True,
-                            shuffle=True, batch_size=batch_size, collate_fn=None)    #batch_size=batch_size//5 originally
+                            shuffle=True, batch_size=batch_size, collate_fn=collate_fn if mode == 'random_frame_from_clip' else None)    #batch_size=batch_size//5 originally
         print('\t- Val num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in val_ds]) / batch_size))
         
     if test_samples:
         test_dl = DataLoader(ConcatDataset(test_ds), num_workers=num_workers, pin_memory=True,
-                             shuffle=True, batch_size=batch_size, collate_fn=None)   #batch_size=batch_size//5 originally
+                             shuffle=True, batch_size=batch_size, collate_fn=collate_fn if mode == 'random_frame_from_clip' else None)   #batch_size=batch_size//5 originally
         print('\t- Test num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in test_ds]) / batch_size))
     print('\n')
     dataloaders_dict = {'train' : train_dl, 'val' : val_dl, 'test' : test_dl}
