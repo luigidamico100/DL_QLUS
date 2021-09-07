@@ -106,7 +106,7 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
                 running_metric += data_metric * inputs.size(0)
                 # running_corrects += torch.sum(preds == labels.data)
                 # running_corrects = torch.Tensor([1])
-                # if not on_cuda: break
+                if not on_cuda: break
 
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
             # epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)

@@ -289,6 +289,10 @@ def get_mat_dataloaders(classes, basePath, target_value=False, replicate_minorit
     test_dl = DataLoader(ConcatDataset(test_ds), num_workers=num_workers, pin_memory=True,
                          shuffle=True, batch_size=batch_size)   #batch_size=batch_size//5 originally
     print(' - Test num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in test_ds]) / batch_size))
-    return train_dl, val_dl, test_dl, train_ds, val_ds, test_ds
+    
+    dataloaders_dict = {'train' : train_dl, 'val' : val_dl, 'test' : test_dl}
+    datasets_dict = {'train' : train_ds, 'val' : val_ds, 'test' : test_ds}
+    
+    return dataloaders_dict, datasets_dict
 
 
