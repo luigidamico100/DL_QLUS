@@ -250,7 +250,7 @@ def show_images(data_loader, batches=10):
 
 def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_minority_classes=True, fold_test=0, fold_val=None, batch_size=32, num_workers=4, replicate_all_classes=10, mode='fixed_number_of_frames',
                            train_samples=True, val_samples=True, test_samples=True):
-    print('\n---------- Creating datasets and dataloaders ----------')
+    print('\n\n---------- Creating datasets and dataloaders ----------')
     if fold_val is None: fold_val = fold_test - 1
     print('Validation fold:', fold_val, '\nTest fold:', fold_test)
     if len(classes) == 2 and all_classes[-1] in classes:

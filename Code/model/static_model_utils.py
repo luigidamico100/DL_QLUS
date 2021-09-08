@@ -164,12 +164,12 @@ def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
     running_metric = 0
     # print("\t", end='')
     for batch_idx, (inputs, labels) in enumerate(dataloader):
-        print('batch_idx: {}'.format(batch_idx))
         if batch_idx >= num_batches:
             break
         inputs = inputs.to(device)
         labels = labels.long().to(device)
-        outputs = model(inputs)
+        with torch.set_grad_enabled(False):
+            outputs = model(inputs)
         metric = metric_fn(outputs, labels)
         score = score_fn(outputs, labels)
         running_metric += metric * inputs.size(0)
@@ -211,7 +211,8 @@ def eval_spearmanCorr(model, dataloader, num_batches=10):
             break
         inputs = inputs.to(device)
         # targets = targets.to(device)
-        outputs = model(inputs)
+        with torch.set_grad_enabled(False):
+            outputs = model(inputs)
         outputs_prob = softmax(outputs)
         running_outputs = torch.cat((running_outputs, outputs.cpu()), dim=0)
         running_outputs_prob = torch.cat((running_outputs_prob, outputs_prob.cpu()), dim=0)
