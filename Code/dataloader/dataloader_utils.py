@@ -295,12 +295,16 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_mino
 
 
     def collate_fn(data):  # collate all frames of a validation or test video
-                            # data: list of batch_size//5 tuple (batch). Each tuple contains a list of the img frames (as tensors) and the label
+                            # data: list of batch_size//... tuple (batch). Each tuple contains a list of the img frames (as tensors) and the label
         X, Y = [], []
         for x, y in data:
             X += x
             Y += [y] * len(x)
-        return torch.stack(X), torch.Tensor(Y).long()
+        Y = torch.Tensor(Y)
+        X = torch.stack(X)
+        if not target_value:
+            Y = Y.long()
+        return X, Y
 
     # data loader sulla concatenazione dei dataset delle singole classi
     train_dl, val_dl, test_dl = None, None, None
@@ -389,7 +393,7 @@ num_workers = 0
 fold_test = 0
 batch_size = 16
 # Mode to choose from [random_frame_from_clip_old, random_frame_from_clip, fixed_number_of_frames, fixed_number_of_frames_1ch]
-mode = 'random_frame_from_clip_old'
+mode = 'random_frame_from_clip'
 replicate_all_classes = 1
 classification = True
 
@@ -409,21 +413,25 @@ if __name__ == '__main__':
     val_it = iter(val_dl)
     val_get = next(val_it)
     print(val_get[0].shape)
+    print(val_get[1])
     
     train_dl = dataloaders_dict['train']
     train_it = iter(train_dl)
     train_get = next(train_it)
     print(train_get[0].shape)
+    print(train_get[1])
     
     val_dl = dataloaders_dict['val']
     val_it = iter(val_dl)
     val_get = next(val_it)
     print(val_get[0].shape)
+    print(val_get[1])
     
     test_dl = dataloaders_dict['test']
     test_it = iter(test_dl)
     test_get = next(test_it)
     print(test_get[0].shape)
+    print(test_get[1])
     
     # train_dl, val_dl, test_dl = dataloaders_dict['train'], dataloaders_dict['val'], dataloaders_dict['test']
     # train_it, val_it, test_it = iter(train_dl), iter(val_dl), iter(test_dl)
