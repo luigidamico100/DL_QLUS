@@ -35,9 +35,9 @@ if __name__ == '__main__':
         _, val_score, val_metric= stat_mod_ut.eval_model(model_evaluation, dataloaders_dict['val'], loss, metric, num_batches=2)
         _, test_score, test_metric= stat_mod_ut.eval_model(model_evaluation, dataloaders_dict['test'], loss, metric, num_batches=2)
         
-        print('TRAIN evaluation -- \n\t\t{}: {:.2f}\t{}: {:.2f}'.format(str(loss), train_score, str(metric), train_metric))
-        print('VAL evaluation -- \n\t\t{}: {:.2f}\t{}: {:.2f}'.format(str(loss), val_score, str(metric), val_metric))
-        print('TEST evaluation -- \n\t\t{}: {:.2f}\t{}: {:.2f}'.format(str(loss), test_score, str(metric), test_metric))
+        print('TRAIN evaluation\t--\t\t{}: {:.2f}\t{}: {:.2f}'.format(str(loss), train_score, str(metric), train_metric))
+        print('VAL evaluation\t--\t\t{}: {:.2f}\t{}: {:.2f}'.format(str(loss), val_score, str(metric), val_metric))
+        print('TEST evaluation\t--\t\t{}: {:.2f}\t{}: {:.2f}'.format(str(loss), test_score, str(metric), test_metric))
         
         if classification:
             dataloaders_dict, _ = dataload_ut.get_mat_dataloaders_v2(classification_classes, basePath=DATASET_PATH, num_workers=num_workers, fold_test=fold_test,
@@ -46,9 +46,9 @@ if __name__ == '__main__':
             train_spearmanCorr = stat_mod_ut.eval_spearmanCorr(model_evaluation, dataloaders_dict['train'], num_batches=2)
             val_spearmanCorr = stat_mod_ut.eval_spearmanCorr(model_evaluation, dataloaders_dict['val'], num_batches=2)
             test_spearmanCorr = stat_mod_ut.eval_spearmanCorr(model_evaluation, dataloaders_dict['test'], num_batches=2)
-            print('TRAIN evaluation -- \n\t\tSpearman Corr: {:.2f}'.format(train_spearmanCorr))
-            print('VAL evaluation -- \n\t\tSpearman Corr: {:.2f}'.format(val_spearmanCorr))
-            print('TEST evaluation -- \n\t\tSpearman Corr: {:.2f}'.format(test_spearmanCorr))
+            print('TRAIN evaluation\t--\t\tSpearman Corr: {:.2f}'.format(train_spearmanCorr))
+            print('VAL evaluation\t--\t\tSpearman Corr: {:.2f}'.format(val_spearmanCorr))
+            print('TEST evaluation\t--\t\tSpearman Corr: {:.2f}'.format(test_spearmanCorr))
         
             
     else:

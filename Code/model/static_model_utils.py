@@ -156,14 +156,15 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
 
 def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
     
-    print('---- Evaluating the model -----')
+    # print('---- Evaluating the model -----')
     model.eval()   # Set model to evaluate mode
     n_samples = 0
     # batch_idx, (inputs, labels) = next(iter(enumerate(dataloader)))
     running_score = 0
     running_metric = 0
-    print("\t", end='')
+    # print("\t", end='')
     for batch_idx, (inputs, labels) in enumerate(dataloader):
+        print('batch_idx: {}'.format(batch_idx))
         if batch_idx >= num_batches:
             break
         inputs = inputs.to(device)
@@ -174,11 +175,11 @@ def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
         running_metric += metric * inputs.size(0)
         running_score += score * inputs.size(0)
         n_samples += len(inputs)
-    print()
+    # print()
     
     metric_final = running_metric / n_samples
     score_final = running_score / n_samples
-    print('\t{}: {:.2f}, {}: {:.2f}\n'.format(str(score_fn), score, str(metric_fn), metric))
+    # print('\t{}: {:.2f}, {}: {:.2f}\n'.format(str(score_fn), score_final, str(metric_fn), metric_final))
     
     ###### AUC - ROS metric ######
     # running_labels_array = running_labels.numpy()
@@ -195,7 +196,7 @@ def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
 
 def eval_spearmanCorr(model, dataloader, num_batches=10):
     
-    print('\n---- Evaluating Spearman Rank Correlation -----')
+    # print('\n---- Evaluating Spearman Rank Correlation -----')
     model.eval()   # Set model to evaluate mode
     n_samples = 0
     # dataloader = dataloaders_dict['val']
@@ -204,7 +205,7 @@ def eval_spearmanCorr(model, dataloader, num_batches=10):
     running_outputs_prob = torch.tensor([])
     running_targets = torch.tensor([])
     softmax = nn.Softmax(dim=-1)
-    print("\t", end='')
+    # print("\t", end='')
     for batch_idx, (inputs, targets) in enumerate(dataloader):
         if batch_idx >= num_batches:
             break
@@ -221,8 +222,8 @@ def eval_spearmanCorr(model, dataloader, num_batches=10):
     rho, pval = stats.spearmanr(running_outputs[:,0].detach(), running_targets)
     rho_prob, pval_prob = stats.spearmanr(running_outputs_prob[:,0].detach(), running_targets)
 
-    print('\tSpearman coefficient: {:.2f}, pval: {:.2f}\n'.format(rho, pval))
-    print('\tSpearman coefficient: {:.2f}, pval: {:.2f}\n'.format(rho_prob, pval_prob))
+    # print('\tSpearman coefficient: {:.2f}, pval: {:.2f}\n'.format(rho, pval))
+    # print('\tSpearman coefficient: {:.2f}, pval: {:.2f}\n'.format(rho_prob, pval_prob))
     
     return rho
     
