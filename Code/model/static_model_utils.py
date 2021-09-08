@@ -369,32 +369,30 @@ def plot_and_save(models, hist, out_folder, info_text):
         (loss_name), (train_loss_history, val_loss_history, test_loss_history) = hist[0]
         (metric_name), (train_metric_history, val_metric_history, test_metric_history) = hist[1]
         
-        #fig, axs = plt.subplots(2)
-        plt.title("Metric vs. Number of Training Epochs")
-        plt.xlabel("Training Epochs")
-        plt.ylabel(metric_name)
-        num_epochs = len(val_metric_history)
-        plt.plot(range(1,num_epochs+1),train_metric_history,label="train metric")
-        plt.plot(range(1,num_epochs+1),val_metric_history,label="val metric")
-        plt.plot(range(1,num_epochs+1),test_metric_history,label="test metric")
-        plt.xticks(np.arange(1, num_epochs+1, 1.0))
-        plt.legend()
-        plt.savefig(out_folder+'Metric_history.jpg')
-        # plt.show()
-        plt.close()
+        fig, axs = plt.subplots(2, sharex=True)
+        fig.suptitle('Training results')
         
-        plt.title("Loss vs. Number of Training Epochs")
-        plt.xlabel("Training Epochs")
-        plt.ylabel(loss_name)
-        num_epochs = len(val_loss_history)
-        plt.plot(range(1,num_epochs+1),train_loss_history,label="train loss")
-        plt.plot(range(1,num_epochs+1),val_loss_history,label="val loss")
-        plt.plot(range(1,num_epochs+1),test_loss_history,label="test loss")
+        axs[0].set_title("Metric vs. Number of Training Epochs")
+        axs[0].set(ylabel=metric_name)
+        num_epochs = len(val_metric_history)
+        axs[0].plot(range(1,num_epochs+1),train_metric_history,label="train metric")
+        axs[0].plot(range(1,num_epochs+1),val_metric_history,label="val metric")
+        axs[0].plot(range(1,num_epochs+1),test_metric_history,label="test metric")
+        axs[0].grid(which='minor')
+        axs[0].legend()
+        axs[0].grid(b=True, which='both')
+        
+        axs[1].set_title("Loss vs. Number of Training Epochs")
+        axs[1].set(xlabel='Training epochs', ylabel=loss_name)
+        num_epochs = len(val_metric_history)
+        axs[1].plot(range(1,num_epochs+1),train_loss_history,label="train loss")
+        axs[1].plot(range(1,num_epochs+1),val_loss_history,label="val loss")
+        axs[1].plot(range(1,num_epochs+1),test_loss_history,label="test loss")
         plt.xticks(np.arange(1, num_epochs+1, 1.0))
-        plt.legend()
-        plt.savefig(out_folder+'Loss_history.jpg')        
-        # plt.show()
-        plt.close()
+        axs[1].legend()
+        axs[1].grid(b=True, which='both')
+        
+        fig.savefig(out_folder+'history.jpg', dpi=300)
         
         (model_last, model_best) = models
         torch.save(model_last, out_folder+'model_last.pt')
@@ -406,14 +404,3 @@ def plot_and_save(models, hist, out_folder, info_text):
         raise Exception('The output folder already exists: {}'.format(out_folder))
         
         
-        
-#%%
-# x = np.linspace(0, 2 * np.pi, 400)
-# y = np.sin(x ** 2)
-
-# fig, axs = plt.subplots(2)
-# axs[0].set_title('ciao')
-# axs[0].plot(x,y, label="cosine")
-# axs[0].legend()
-# axs[0].set(xlabel='xlabel')
-
