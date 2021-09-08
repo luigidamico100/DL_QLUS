@@ -31,6 +31,7 @@ on_cuda = torch.cuda.is_available()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print('Device: ', device)
 from sklearn.metrics import roc_curve, roc_auc_score
+from scipy import stats
 
 
 #%%
@@ -165,25 +166,14 @@ def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
     for batch_idx, (inputs, labels) in enumerate(dataloader):
         if batch_idx >= num_batches:
             break
-        print(inputs.shape)
-        print(labels.shape)
         inputs = inputs.to(device)
         labels = labels.long().to(device)
-        print("*--", end='')
-        inputs = inputs.to(device)
-        print("*--", end='')
-        labels = labels.to(device)
-        print("*--", end='')
         outputs = model(inputs)
-        print("*--", end='')
         metric = metric_fn(outputs, labels)
         score = score_fn(outputs, labels)
-        del outputs, labels
-        torch.cuda.empty_cache()
         running_metric += metric * inputs.size(0)
         running_score += score * inputs.size(0)
         n_samples += len(inputs)
-        print('fine batch')
     print()
     
     metric_final = running_metric / n_samples
@@ -203,6 +193,39 @@ def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
     return n_samples, score_final.item(), metric_final.item() #, auc_score
 
 
+def eval_spearmanCorr(model, dataloader, num_batches=10):
+    
+    print('\n---- Evaluating Spearman Rank Correlation -----')
+    model.eval()   # Set model to evaluate mode
+    n_samples = 0
+    # dataloader = dataloaders_dict['val']
+    # batch_idx, (inputs, targets) = next(iter(enumerate(dataloader)))
+    running_outputs = torch.tensor([]).to(device)
+    running_outputs_prob = torch.tensor([]).to(device)
+    running_targets = torch.tensor([]).to(device)
+    softmax = nn.Softmax(dim=-1)
+    print("\t", end='')
+    for batch_idx, (inputs, targets) in enumerate(dataloader):
+        if batch_idx >= num_batches:
+            break
+        inputs = inputs.to(device)
+        targets = targets.to(device)
+        outputs = model(inputs)
+        outputs_prob = softmax(outputs)
+        running_outputs = torch.cat((running_outputs, outputs), dim=0)
+        running_outputs_prob = torch.cat((running_outputs_prob, outputs_prob), dim=0)
+        running_targets = torch.cat((running_targets, targets), dim=0)
+        n_samples += len(inputs)
+    print()
+
+    rho, pval = stats.spearmanr(running_outputs[:,0].detach(), running_targets)
+    rho_prob, pval_prob = stats.spearmanr(running_outputs_prob[:,0].detach(), running_targets)
+
+    print('\tSpearman coefficient: {:.2f}, pval: {:.2f}\n'.format(rho, pval))
+    print('\tSpearman coefficient: {:.2f}, pval: {:.2f}\n'.format(rho_prob, pval_prob))
+    
+    return rho
+    
 def set_parameter_requires_grad(model, feature_extracting):
     if feature_extracting:
         for param in model.parameters():

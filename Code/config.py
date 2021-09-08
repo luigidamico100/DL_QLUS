@@ -16,12 +16,12 @@ DATASET_PATH = '/mnt/disk0/diego.gragnaniello/Eco/ICPR/Dataset_processato/Datase
 num_workers = 0
 
 
-experiment_all_fold = True
+experiment_all_fold = False
 ''' Most common for training'''
 OUTFOLDER_PATH = '../Experiments/exp_9/'     # used in case experiment_all_fold=False
 OUTFOLDER_ALLFOLD_FOLDER = '../Experiments/experiment_allfold_exp_0/'    # used in case experiment_all_fold=True
 classification = True
-batch_size = 32 if on_cuda else 2
+batch_size = 32 if on_cuda else 4
 comment_text = "...."
 
 ''' Model evaluation '''

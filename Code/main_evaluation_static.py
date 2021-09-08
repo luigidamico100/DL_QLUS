@@ -25,11 +25,12 @@ if __name__ == '__main__':
     
     if not experiment_all_fold:
 
-        dataloaders_dict, _ = dataload_ut.get_mat_dataloaders(classification_classes, basePath=DATASET_PATH, num_workers=num_workers, fold_test=fold_test,
+        model_evaluation = torch.load(MODEL_PATH, map_location=device)        
+
+        dataloaders_dict, _ = dataload_ut.get_mat_dataloaders_v2(classification_classes, basePath=DATASET_PATH, num_workers=num_workers, fold_test=fold_test,
                                                                                    batch_size=batch_size, mode=mode, replicate_all_classes=replicate_all_classes,
                                                                                    target_value=not classification)
         loss, metric = config.get_problem_stuff()
-        model_evaluation = torch.load(MODEL_PATH, map_location=device)
         
         _, train_score, train_metric = stat_mod_ut.eval_model(model_evaluation, dataloaders_dict['train'], loss, metric, num_batches=2)
         _, val_score, val_metric= stat_mod_ut.eval_model(model_evaluation, dataloaders_dict['val'], loss, metric, num_batches=2)
@@ -39,14 +40,25 @@ if __name__ == '__main__':
         print('VAL evaluation -- \n\t\t{}: {:.2f}\t{}: {:.2f}'.format(str(loss), val_score, str(metric), val_metric))
         print('TEST evaluation -- \n\t\t{}: {:.2f}\t{}: {:.2f}'.format(str(loss), test_score, str(metric), test_metric))
         
+        if classification:
+            dataloaders_dict, _ = dataload_ut.get_mat_dataloaders_v2(classification_classes, basePath=DATASET_PATH, num_workers=num_workers, fold_test=fold_test,
+                                                                                       batch_size=batch_size, mode=mode, replicate_all_classes=replicate_all_classes,
+                                                                                       target_value=True)
+            train_spearmanCorr = stat_mod_ut.eval_spearmanCorr(model_evaluation, dataloaders_dict['train'], num_batches=2)
+            val_spearmanCorr = stat_mod_ut.eval_spearmanCorr(model_evaluation, dataloaders_dict['val'], num_batches=2)
+            test_spearmanCorr = stat_mod_ut.eval_spearmanCorr(model_evaluation, dataloaders_dict['test'], num_batches=2)
+            print('TRAIN evaluation -- \n\t\tSpearman Corr: {:.2f}'.format(train_spearmanCorr))
+            print('VAL evaluation -- \n\t\tSpearman Corr: {:.2f}'.format(val_spearmanCorr))
+            print('TEST evaluation -- \n\t\tSpearman Corr: {:.2f}'.format(test_spearmanCorr))
+        
+            
     else:
         running_metrics = np.empty((0,2))
         for fold_test in fold_test_list:
             print('##################### Evaluating new fold: ' + str(fold_test) + ' #####################')
             dataloaders_dict, _ = dataload_ut.get_mat_dataloaders_v2(classification_classes, basePath=DATASET_PATH, num_workers=num_workers, fold_test=fold_test,
                                                                                             batch_size=batch_size, mode=mode, replicate_all_classes=replicate_all_classes,
-                                                                                            target_value=not classification, 
-                                                                                            train_samples=False, val_samples=False, test_samples=True)
+                                                                                            target_value=True)
 
             loss, metric = config.get_problem_stuff()
             inputModel_path = ALLFOLD_MODELS_FOLDER + 'exp_fold{}/'.format(fold_test) + 'model_best.pt'
@@ -61,16 +73,5 @@ if __name__ == '__main__':
         print('Test ' + str(metric)+ ' for each fold: ')
         print(running_metrics)
         print('\nAggregate ' + str(metric) + ': '+str(metric_weighted))
-
-
-
-
-
-
-
-
-
-
-
 
 
