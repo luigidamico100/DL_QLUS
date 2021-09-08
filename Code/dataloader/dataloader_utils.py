@@ -311,7 +311,7 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_mino
     if train_samples:
         train_dl = DataLoader(ConcatDataset(train_ds), num_workers=num_workers, pin_memory=True,
                               shuffle=True, batch_size=batch_size)
-        print('\t- Train num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in train_ds]) / batch_size))
+        print('\t- Train num samples: {}, Required batch iteration: {:.1f}'.format(sum([len(_) for _ in train_ds]), sum([len(_) for _ in train_ds]) / batch_size))
         
     if mode == 'random_frame_from_clip':
         collate = collate_fn
@@ -322,12 +322,11 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_mino
     if val_samples:
         val_dl = DataLoader(ConcatDataset(val_ds), num_workers=num_workers, pin_memory=True,
                             shuffle=True, batch_size=batch_size, collate_fn=collate)
-        print('\t- Val num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in val_ds]) / batch_size))
         
     if test_samples:
         test_dl = DataLoader(ConcatDataset(test_ds), num_workers=num_workers, pin_memory=True,
                              shuffle=True, batch_size=batch_size, collate_fn=collate) 
-        print('\t- Test num iteration to complete dataset: {:.1f}'.format(sum([len(_) for _ in test_ds]) / batch_size))
+
     print('\n')
     dataloaders_dict = {'train' : train_dl, 'val' : val_dl, 'test' : test_dl}
     datasets_dict = {'train' : train_ds, 'val' : val_ds, 'test' : test_ds}

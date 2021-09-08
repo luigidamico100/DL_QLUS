@@ -18,13 +18,12 @@ from torch import nn
 import numpy as np
 
 
-
 #%% Evaluate model
 if __name__ == '__main__':
-    num_batches = 100000 if on_cuda else 2
+    num_batches = 10e10 if on_cuda else 2
     
     if not experiment_all_fold:
-
+        print('##################### Evaluating model in: ' + MODEL_PATH + ' #####################\n')
         model_evaluation = torch.load(MODEL_PATH, map_location=device)        
 
         dataloaders_dict, _ = dataload_ut.get_mat_dataloaders_v2(classification_classes, basePath=DATASET_PATH, num_workers=num_workers, fold_test=fold_test,
@@ -53,6 +52,7 @@ if __name__ == '__main__':
         
             
     else:
+        print('##################### Evaluating all models in: ' + ALLFOLD_MODELS_FOLDER + ' #####################\n')
         running_metrics = np.empty((0,2))
         for fold_test in fold_test_list:
             print('##################### Evaluating new fold: ' + str(fold_test) + ' #####################')
@@ -61,7 +61,7 @@ if __name__ == '__main__':
                                                                                             target_value=True)
 
             loss, metric = config.get_problem_stuff()
-            inputModel_path = ALLFOLD_MODELS_FOLDER + 'exp_fold{}/'.format(fold_test) + 'model_best.pt'
+            inputModel_path = ALLFOLD_MODELS_FOLDER + 'exp_fold_{}/'.format(fold_test) + 'model_best.pt'
             model_evaluation = torch.load(inputModel_path, map_location=device)
             n_samples, _, test_metric= stat_mod_ut.eval_model(model_evaluation, dataloaders_dict['test'], loss, metric, num_batches=num_batches)
             running_metrics = np.concatenate((running_metrics, np.array([[n_samples, test_metric]])))

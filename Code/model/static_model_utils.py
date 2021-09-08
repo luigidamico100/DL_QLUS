@@ -32,6 +32,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print('Device: ', device)
 from sklearn.metrics import roc_curve, roc_auc_score
 from scipy import stats
+import pickle
 
 
 #%%
@@ -110,7 +111,6 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
                 if not on_cuda: break
 
             epoch_loss = running_loss / n_samples
-            # epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
             epoch_metric = running_metric / n_samples
 
             print('\t\t{}: {:.4f},  {}: {:.4f}\n'.format(str(criterion), epoch_loss, str(metric), epoch_metric))
@@ -357,16 +357,19 @@ def print_model_parameters(model):
     total_learnable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print('Total parameters: %d' %total_params)
     print('Total learnable parameters: %d' %total_learnable_params)
-    
-    
+
+
 def plot_and_save(models, hist, out_folder, info_text):
     if not os.path.exists(out_folder):
         os.makedirs(out_folder)
+        
+        with open(out_folder+'hist.pkl', 'wb') as file:
+            pickle.dump(hist, file)
     
         (loss_name), (train_loss_history, val_loss_history, test_loss_history) = hist[0]
         (metric_name), (train_metric_history, val_metric_history, test_metric_history) = hist[1]
         
-        fig, axs = plt.subplots(2)
+        #fig, axs = plt.subplots(2)
         plt.title("Metric vs. Number of Training Epochs")
         plt.xlabel("Training Epochs")
         plt.ylabel(metric_name)
@@ -401,6 +404,16 @@ def plot_and_save(models, hist, out_folder, info_text):
         f.close()
     else:
         raise Exception('The output folder already exists: {}'.format(out_folder))
+        
+        
+        
+#%%
+# x = np.linspace(0, 2 * np.pi, 400)
+# y = np.sin(x ** 2)
 
-
+# fig, axs = plt.subplots(2)
+# axs[0].set_title('ciao')
+# axs[0].plot(x,y, label="cosine")
+# axs[0].legend()
+# axs[0].set(xlabel='xlabel')
 
