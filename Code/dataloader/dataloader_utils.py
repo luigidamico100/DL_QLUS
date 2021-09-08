@@ -252,7 +252,7 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_mino
                            train_samples=True, val_samples=True, test_samples=True):
     print('\n\n---------- Creating datasets and dataloaders ----------')
     if fold_val is None: fold_val = fold_test - 1
-    print('Validation fold:', fold_val, '\nTest fold:', fold_test)
+    print('Validation fold:', fold_val, ', Test fold:', fold_test)
     if len(classes) == 2 and all_classes[-1] in classes:
         Warning('Correggere le label del dataset!')
 
@@ -327,7 +327,7 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, replicate_mino
         test_dl = DataLoader(ConcatDataset(test_ds), num_workers=num_workers, pin_memory=True,
                              shuffle=True, batch_size=batch_size, collate_fn=collate) 
 
-    print('\n')
+    print()
     dataloaders_dict = {'train' : train_dl, 'val' : val_dl, 'test' : test_dl}
     datasets_dict = {'train' : train_ds, 'val' : val_ds, 'test' : test_ds}
     
