@@ -12,16 +12,16 @@ from torchmetrics import Accuracy, MeanAbsolutePercentageError
 
 on_cuda = torch.cuda.is_available()
 device = torch.device("cuda:0" if on_cuda else "cpu")
-DATASET_PATH = '/mnt/disk0/diego.gragnaniello/Eco/ICPR/Dataset_processato/Dataset_f' if on_cuda else '/Volumes/SD Card/ICPR/Dataset_processato/Dataset_f'
+DATASET_PATH = '/mnt/disk2/diego.gragnaniello/Eco/ICPR/Dataset_processato/Dataset_f' if on_cuda else '/Volumes/SD Card/ICPR/Dataset_processato/Dataset_f'
 num_workers = 0
 
 
-experiment_all_fold = False
+experiment_all_fold = True
 ''' Most common for training'''
 OUTFOLDER_PATH = '../Experiments/exp_9/'     # used in case experiment_all_fold=False
 OUTFOLDER_ALLFOLD_FOLDER = '../Experiments/experiment_allfold_exp_0/'    # used in case experiment_all_fold=True
 classification = True
-batch_size = 32 if on_cuda else 4
+batch_size = 64 if on_cuda else 4
 comment_text = "...."
 
 ''' Model evaluation '''

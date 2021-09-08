@@ -200,20 +200,20 @@ def eval_spearmanCorr(model, dataloader, num_batches=10):
     n_samples = 0
     # dataloader = dataloaders_dict['val']
     # batch_idx, (inputs, targets) = next(iter(enumerate(dataloader)))
-    running_outputs = torch.tensor([]).to(device)
-    running_outputs_prob = torch.tensor([]).to(device)
-    running_targets = torch.tensor([]).to(device)
+    running_outputs = torch.tensor([])
+    running_outputs_prob = torch.tensor([])
+    running_targets = torch.tensor([])
     softmax = nn.Softmax(dim=-1)
     print("\t", end='')
     for batch_idx, (inputs, targets) in enumerate(dataloader):
         if batch_idx >= num_batches:
             break
         inputs = inputs.to(device)
-        targets = targets.to(device)
+        # targets = targets.to(device)
         outputs = model(inputs)
         outputs_prob = softmax(outputs)
-        running_outputs = torch.cat((running_outputs, outputs), dim=0)
-        running_outputs_prob = torch.cat((running_outputs_prob, outputs_prob), dim=0)
+        running_outputs = torch.cat((running_outputs, outputs.cpu()), dim=0)
+        running_outputs_prob = torch.cat((running_outputs_prob, outputs_prob.cpu()), dim=0)
         running_targets = torch.cat((running_targets, targets), dim=0)
         n_samples += len(inputs)
     print()
