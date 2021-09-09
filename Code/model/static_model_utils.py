@@ -31,7 +31,7 @@ on_cuda = torch.cuda.is_available()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print('Device: ', device)
 from sklearn.metrics import roc_curve, roc_auc_score
-from scipy import stats
+from scipy.stats import spearmanr
 import pickle
 
 
@@ -154,7 +154,7 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
     return models, hist#, best_outputs, best_labels
 
 
-def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
+def eval_model(model, dataloader, score_fn, metric_fn, debug=False):
     
     # print('---- Evaluating the model -----')
     model.eval()   # Set model to evaluate mode
@@ -164,7 +164,7 @@ def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
     running_metric = 0
     # print("\t", end='')
     for batch_idx, (inputs, labels) in enumerate(dataloader):
-        if batch_idx >= num_batches:
+        if debug and batch_idx >= 2:
             break
         inputs = inputs.to(device)
         labels = labels.long().to(device)
@@ -194,7 +194,7 @@ def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
     return n_samples, score_final.item(), metric_final.item() #, auc_score
 
 
-def eval_spearmanCorr(model, dataloader, num_batches=10):
+def eval_spearmanCorr(model, dataloader, debug=False):
     
     # print('\n---- Evaluating Spearman Rank Correlation -----')
     model.eval()   # Set model to evaluate mode
@@ -207,26 +207,58 @@ def eval_spearmanCorr(model, dataloader, num_batches=10):
     softmax = nn.Softmax(dim=-1)
     # print("\t", end='')
     for batch_idx, (inputs, targets) in enumerate(dataloader):
-        if batch_idx >= num_batches:
+        if debug and batch_idx >= 2:
             break
         inputs = inputs.to(device)
         # targets = targets.to(device)
         with torch.set_grad_enabled(False):
             outputs = model(inputs)
-        outputs_prob = softmax(outputs)
+            outputs_prob = softmax(outputs)
         running_outputs = torch.cat((running_outputs, outputs.cpu()), dim=0)
         running_outputs_prob = torch.cat((running_outputs_prob, outputs_prob.cpu()), dim=0)
         running_targets = torch.cat((running_targets, targets), dim=0)
         n_samples += len(inputs)
     print()
 
-    rho, pval = stats.spearmanr(running_outputs[:,0].detach(), running_targets)
-    rho_prob, pval_prob = stats.spearmanr(running_outputs_prob[:,0].detach(), running_targets)
+    rho, pval = spearmanr(running_outputs[:,0].detach(), running_targets)
+    rho_prob, pval_prob = spearmanr(running_outputs_prob[:,0].detach(), running_targets)
 
     # print('\tSpearman coefficient: {:.2f}, pval: {:.2f}\n'.format(rho, pval))
     # print('\tSpearman coefficient: {:.2f}, pval: {:.2f}\n'.format(rho_prob, pval_prob))
     
-    return rho
+    return n_samples, rho_prob
+
+
+def get_data_single_fold(model, dataloader, debug=False):
+    
+    model.eval()   # Set model to evaluate mode
+    n_samples = 0
+    # batch_idx, (inputs, labels) = next(iter(enumerate(dataloader)))
+    running_outputs = torch.tensor([])
+    running_outputs_prob = torch.tensor([])
+    running_targets = torch.tensor([])
+    running_labels = torch.tensor([])
+    running_informations = []
+    softmax = nn.Softmax(dim=-1)
+
+    for batch_idx, (inputs, labels, targets, informations) in enumerate(dataloader):
+        if debug and batch_idx >= 2:
+            break
+        labels = labels.long()
+        inputs = inputs.to(device)
+        with torch.set_grad_enabled(False):
+            outputs = model(inputs)
+            outputs_prob = softmax(outputs)
+        running_outputs = torch.cat((running_outputs, outputs.cpu()), dim=0)
+        running_outputs_prob = torch.cat((running_outputs_prob, outputs_prob.cpu()), dim=0)
+        running_labels = torch.cat((running_labels, labels.cpu()), dim=0)
+        running_targets = torch.cat((running_targets, targets.cpu()), dim=0)
+        running_informations += informations
+        n_samples += len(inputs)
+    
+    return n_samples, np.array(running_outputs), np.array(running_outputs_prob), np.expand_dims(np.array(running_labels),axis=1), np.expand_dims(np.array(running_targets), axis=1), running_informations 
+
+
     
 def set_parameter_requires_grad(model, feature_extracting):
     if feature_extracting:

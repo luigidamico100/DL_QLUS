@@ -371,6 +371,34 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=
     return dataloaders_dict, datasets_dict
 
 
+def get_columns_from_informationdict(all_informations):
+    col_bimbo_name = [None] * len(all_informations)
+    for idx, informations in enumerate(all_informations):
+        col_bimbo_name[idx] = informations['bimbo_name']
+        
+    col_classe = [None] * len(all_informations)
+    for idx, informations in enumerate(all_informations):
+        col_classe[idx] = informations['classe']
+        
+    col_esame_name = [None] * len(all_informations)
+    for idx, informations in enumerate(all_informations):
+        col_esame_name[idx] = informations['esame_name']
+
+    col_paziente = [None] * len(all_informations)
+    for idx, informations in enumerate(all_informations):
+        col_paziente[idx] = informations['paziente']
+        
+    col_valore = [None] * len(all_informations)
+    for idx, informations in enumerate(all_informations):
+        col_valore[idx] = informations['valore']
+        
+    col_video_name = [None] * len(all_informations)
+    for idx, informations in enumerate(all_informations):
+        col_video_name[idx] = informations['video_name']
+    
+    return col_bimbo_name, col_classe, col_esame_name, col_paziente, col_valore, col_video_name
+
+
 #%%
 classification_classes = ['BEST', 'RDS']
 DATASET_PATH  = '/Volumes/SD Card/ICPR/Dataset_processato/Dataset_f'
