@@ -72,19 +72,19 @@ if __name__ == '__main__':
             folds = np.ones((n_samples,1)) * fold_test
             running_outputs, running_outputs_prob, running_labels, running_targets, running_folds, running_informations = np.concatenate((running_outputs, outputs)), np.concatenate((running_outputs_prob, outputs_prob)), np.concatenate((running_labels, labels)), np.concatenate((running_targets, targets)), np.concatenate((running_folds, folds)), running_informations+informations
                 
-        data = np.concatenate((running_outputs, running_outputs_prob, running_labels, running_targets, running_folds), axis=1)
-        dataframe = DataFrame(data=data, columns=('nn_output_label0','nn_output_label1','nn_output_prob_label0','nn_output_prob_label1','label','EMOGAS index','fold'))
-        information_columns = dataload_ut.get_columns_from_informationdict(running_informations)
-        dataframe['bimbo_name'], dataframe['classe'], dataframe['esame_name'], dataframe['paziente'], dataframe['valore'], dataframe['video_name'] = information_columns
-
         ## Aggregate quantities ##
-        labels_predicted = np.argmax(running_outputs, axis=1)
+        labels_predicted = np.expand_dims(np.argmax(running_outputs, axis=1),axis=1)
         aggregate_accuracy = accuracy_score(running_labels, labels_predicted)
         aggregate_spearmanr = spearmanr(running_targets, running_outputs[:,0])
         aggregate_spearmanr_prob = spearmanr(running_targets, running_outputs_prob[:,0])
         
         print('\nAggregate accuracy: {:.3f}, Aggregate spearmanr: {:.3f}, Aggregate spearmanr_prob: {:.3f}'.format(aggregate_accuracy, aggregate_spearmanr[0], aggregate_spearmanr_prob[0]))
-        ##  ##
+        #############################
+
+        data = np.concatenate((running_outputs, running_outputs_prob, labels_predicted, running_labels, running_targets, running_folds), axis=1)
+        dataframe = DataFrame(data=data, columns=('nn_output_label0','nn_output_label1','nn_output_prob_label0','nn_output_prob_label1','label_prediction', 'label','EMOGAS index','fold'))
+        information_columns = dataload_ut.get_columns_from_informationdict(running_informations)
+        dataframe['bimbo_name'], dataframe['classe'], dataframe['esame_name'], dataframe['paziente'], dataframe['valore'], dataframe['video_name'] = information_columns
 
         dataframe.to_csv(ALLFOLD_MODELS_FOLDER+'evaluation_dataframe.csv')
         f = open(ALLFOLD_MODELS_FOLDER + "evaluation_aggregate_metrics.txt", "x")
