@@ -16,7 +16,7 @@ import config
 import torch
 from torch import nn
 import numpy as np
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix
 from scipy.stats import spearmanr
 from pandas import DataFrame
 
@@ -75,6 +75,8 @@ if __name__ == '__main__':
         ## Aggregate quantities ##
         labels_predicted = np.expand_dims(np.argmax(running_outputs, axis=1),axis=1)
         aggregate_accuracy = accuracy_score(running_labels, labels_predicted)
+        aggregate_confusionMatrix = confusion_matrix(running_labels, labels_predicted)
+        aggregate_confusionMatrix_normalized = confusion_matrix(running_labels, labels_predicted, normalize='true')
         aggregate_spearmanr = spearmanr(running_targets, running_outputs[:,0])
         aggregate_spearmanr_prob = spearmanr(running_targets, running_outputs_prob[:,0])
         
@@ -90,9 +92,13 @@ if __name__ == '__main__':
 
         ## Save results ##
         dataframe.to_csv(ALLFOLD_MODELS_FOLDER+'evaluation_dataframe.csv')
-        f = open(ALLFOLD_MODELS_FOLDER + "evaluation_aggregate_metrics.txt", "x")
+        f = open(ALLFOLD_MODELS_FOLDER + "evaluation_aggregate_metrics.txt", "w")
         f.write('Aggregate accuracy: {}\nAggregate spearmanr: {}, p_value: {}\nAggregate spearmanr_prob: {}, p_value: {}'.format(aggregate_accuracy, aggregate_spearmanr[0], aggregate_spearmanr[1], aggregate_spearmanr_prob[0], aggregate_spearmanr_prob[1]))
+        f.write('\nConfusion matrix:\n' + str(aggregate_confusionMatrix))
+        f.write('\nConfusion matrix normalized:\n' + str(aggregate_confusionMatrix_normalized))
         f.close()
         #############################
+        
+        
 
 
