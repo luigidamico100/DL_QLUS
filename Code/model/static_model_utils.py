@@ -31,6 +31,8 @@ on_cuda = torch.cuda.is_available()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print('Device: ', device)
 from sklearn.metrics import roc_curve, roc_auc_score
+from scipy.stats import spearmanr
+import pickle
 
 
 #%%
@@ -65,6 +67,7 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
             running_metric = 0.0
 
             # Iterate over data.
+            n_samples = 0
             for batch_idx, (inputs, labels) in enumerate(dataloaders[phase]):
                 #print("\tbatch_idx = {}".format(batch_idx), end='')
                 if not isinstance(criterion, nn.CrossEntropyLoss):  # If it is not the case of classification-problem
@@ -104,13 +107,11 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
                 running_metric += data_metric * inputs.size(0)
-                # running_corrects += torch.sum(preds == labels.data)
-                # running_corrects = torch.Tensor([1])
+                n_samples += len(inputs)
                 if not on_cuda: break
 
-            epoch_loss = running_loss / len(dataloaders[phase].dataset)
-            # epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
-            epoch_metric = running_metric / len(dataloaders[phase].dataset)
+            epoch_loss = running_loss / n_samples
+            epoch_metric = running_metric / n_samples
 
             print('\t\t{}: {:.4f},  {}: {:.4f}\n'.format(str(criterion), epoch_loss, str(metric), epoch_metric))
 
@@ -153,32 +154,32 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
     return models, hist#, best_outputs, best_labels
 
 
-def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
+def eval_model(model, dataloader, score_fn, metric_fn, debug=False):
     
-    print('---- Evaluating the model -----')
+    # print('---- Evaluating the model -----')
     model.eval()   # Set model to evaluate mode
     n_samples = 0
     # batch_idx, (inputs, labels) = next(iter(enumerate(dataloader)))
-    running_outputs = torch.tensor([]).to(device)
-    running_labels = torch.tensor([]).long().to(device)
-    print("\t", end='')
+    running_score = 0
+    running_metric = 0
+    # print("\t", end='')
     for batch_idx, (inputs, labels) in enumerate(dataloader):
-        if batch_idx >= num_batches:
+        if debug and batch_idx >= 2:
             break
         inputs = inputs.to(device)
         labels = labels.long().to(device)
-        print("*", end='')
-        inputs = inputs.to(device)
-        labels = labels.to(device)
-        outputs = model(inputs)
-        running_outputs = torch.cat((running_outputs, outputs), dim=0)
-        running_labels = torch.cat((running_labels, labels), dim=0)#.type(torch.LongTensor)
+        with torch.set_grad_enabled(False):
+            outputs = model(inputs)
+        metric = metric_fn(outputs, labels)
+        score = score_fn(outputs, labels)
+        running_metric += metric * inputs.size(0)
+        running_score += score * inputs.size(0)
         n_samples += len(inputs)
-    print()
+    # print()
     
-    metric = metric_fn(running_outputs, running_labels)
-    score = score_fn(running_outputs, running_labels)
-    print('\t{}: {:.2f}, {}: {:.2f}\n'.format(str(score_fn), score, str(metric_fn), metric))
+    metric_final = running_metric / n_samples
+    score_final = running_score / n_samples
+    # print('\t{}: {:.2f}, {}: {:.2f}\n'.format(str(score_fn), score_final, str(metric_fn), metric_final))
     
     ###### AUC - ROS metric ######
     # running_labels_array = running_labels.numpy()
@@ -190,9 +191,75 @@ def eval_model(model, dataloader, score_fn, metric_fn, num_batches=10):
     # auc_score = roc_auc_score(running_labels_array, probs_array[:,1])
     ##############################    
     
-    return n_samples, score.item(), metric.item() #, auc_score
+    return n_samples, score_final.item(), metric_final.item() #, auc_score
 
 
+def eval_spearmanCorr(model, dataloader, debug=False):
+    
+    # print('\n---- Evaluating Spearman Rank Correlation -----')
+    model.eval()   # Set model to evaluate mode
+    n_samples = 0
+    # dataloader = dataloaders_dict['val']
+    # batch_idx, (inputs, targets) = next(iter(enumerate(dataloader)))
+    running_outputs = torch.tensor([])
+    running_outputs_prob = torch.tensor([])
+    running_targets = torch.tensor([])
+    softmax = nn.Softmax(dim=-1)
+    # print("\t", end='')
+    for batch_idx, (inputs, targets) in enumerate(dataloader):
+        if debug and batch_idx >= 2:
+            break
+        inputs = inputs.to(device)
+        # targets = targets.to(device)
+        with torch.set_grad_enabled(False):
+            outputs = model(inputs)
+            outputs_prob = softmax(outputs)
+        running_outputs = torch.cat((running_outputs, outputs.cpu()), dim=0)
+        running_outputs_prob = torch.cat((running_outputs_prob, outputs_prob.cpu()), dim=0)
+        running_targets = torch.cat((running_targets, targets), dim=0)
+        n_samples += len(inputs)
+    print()
+
+    rho, pval = spearmanr(running_outputs[:,0].detach(), running_targets)
+    rho_prob, pval_prob = spearmanr(running_outputs_prob[:,0].detach(), running_targets)
+
+    # print('\tSpearman coefficient: {:.2f}, pval: {:.2f}\n'.format(rho, pval))
+    # print('\tSpearman coefficient: {:.2f}, pval: {:.2f}\n'.format(rho_prob, pval_prob))
+    
+    return n_samples, rho_prob
+
+
+def get_data_single_fold(model, dataloader, debug=False):
+    
+    model.eval()   # Set model to evaluate mode
+    n_samples = 0
+    # batch_idx, (inputs, labels) = next(iter(enumerate(dataloader)))
+    running_outputs = torch.tensor([])
+    running_outputs_prob = torch.tensor([])
+    running_targets = torch.tensor([])
+    running_labels = torch.tensor([])
+    running_informations = []
+    softmax = nn.Softmax(dim=-1)
+
+    for batch_idx, (inputs, labels, targets, informations) in enumerate(dataloader):
+        if debug and batch_idx >= 2:
+            break
+        labels = labels.long()
+        inputs = inputs.to(device)
+        with torch.set_grad_enabled(False):
+            outputs = model(inputs)
+            outputs_prob = softmax(outputs)
+        running_outputs = torch.cat((running_outputs, outputs.cpu()), dim=0)
+        running_outputs_prob = torch.cat((running_outputs_prob, outputs_prob.cpu()), dim=0)
+        running_labels = torch.cat((running_labels, labels.cpu()), dim=0)
+        running_targets = torch.cat((running_targets, targets.cpu()), dim=0)
+        running_informations += informations
+        n_samples += len(inputs)
+    
+    return n_samples, np.array(running_outputs), np.array(running_outputs_prob), np.expand_dims(np.array(running_labels),axis=1), np.expand_dims(np.array(running_targets), axis=1), running_informations 
+
+
+    
 def set_parameter_requires_grad(model, feature_extracting):
     if feature_extracting:
         for param in model.parameters():
@@ -324,42 +391,42 @@ def print_model_parameters(model):
     total_learnable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print('Total parameters: %d' %total_params)
     print('Total learnable parameters: %d' %total_learnable_params)
-    
-    
+
+
 def plot_and_save(models, hist, out_folder, info_text):
     if not os.path.exists(out_folder):
         os.makedirs(out_folder)
+        
+        with open(out_folder+'hist.pkl', 'wb') as file:
+            pickle.dump(hist, file)
     
         (loss_name), (train_loss_history, val_loss_history, test_loss_history) = hist[0]
         (metric_name), (train_metric_history, val_metric_history, test_metric_history) = hist[1]
         
-        fig, axs = plt.subplots(2)
+        fig, axs = plt.subplots(2, sharex=True)
+        fig.suptitle('Training results')
         
-        plt.title("Metric vs. Number of Training Epochs")
-        plt.xlabel("Training Epochs")
-        plt.ylabel(metric_name)
+        axs[0].set_title("Metric vs. Number of Training Epochs")
+        axs[0].set(ylabel=metric_name)
         num_epochs = len(val_metric_history)
-        plt.plot(range(1,num_epochs+1),train_metric_history,label="train metric")
-        plt.plot(range(1,num_epochs+1),val_metric_history,label="val metric")
-        plt.plot(range(1,num_epochs+1),test_metric_history,label="test metric")
-        plt.xticks(np.arange(1, num_epochs+1, 1.0))
-        plt.legend()
-        plt.savefig(out_folder+'Metric_history.jpg')
-        # plt.show()
-        plt.close()
+        axs[0].plot(range(1,num_epochs+1),train_metric_history,label="train metric")
+        axs[0].plot(range(1,num_epochs+1),val_metric_history,label="val metric")
+        axs[0].plot(range(1,num_epochs+1),test_metric_history,label="test metric")
+        axs[0].grid(which='minor')
+        axs[0].legend()
+        axs[0].grid(b=True, which='both')
         
-        plt.title("Loss vs. Number of Training Epochs")
-        plt.xlabel("Training Epochs")
-        plt.ylabel(loss_name)
-        num_epochs = len(val_loss_history)
-        plt.plot(range(1,num_epochs+1),train_loss_history,label="train loss")
-        plt.plot(range(1,num_epochs+1),val_loss_history,label="val loss")
-        plt.plot(range(1,num_epochs+1),test_loss_history,label="test loss")
+        axs[1].set_title("Loss vs. Number of Training Epochs")
+        axs[1].set(xlabel='Training epochs', ylabel=loss_name)
+        num_epochs = len(val_metric_history)
+        axs[1].plot(range(1,num_epochs+1),train_loss_history,label="train loss")
+        axs[1].plot(range(1,num_epochs+1),val_loss_history,label="val loss")
+        axs[1].plot(range(1,num_epochs+1),test_loss_history,label="test loss")
         plt.xticks(np.arange(1, num_epochs+1, 1.0))
-        plt.legend()
-        plt.savefig(out_folder+'Loss_history.jpg')        
-        # plt.show()
-        plt.close()
+        axs[1].legend()
+        axs[1].grid(b=True, which='both')
+        
+        fig.savefig(out_folder+'history.jpg', dpi=300)
         
         (model_last, model_best) = models
         torch.save(model_last, out_folder+'model_last.pt')
@@ -369,6 +436,5 @@ def plot_and_save(models, hist, out_folder, info_text):
         f.close()
     else:
         raise Exception('The output folder already exists: {}'.format(out_folder))
-
-
-
+        
+        
