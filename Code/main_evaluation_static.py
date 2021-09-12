@@ -81,15 +81,18 @@ if __name__ == '__main__':
         print('\nAggregate accuracy: {:.3f}, Aggregate spearmanr: {:.3f}, Aggregate spearmanr_prob: {:.3f}'.format(aggregate_accuracy, aggregate_spearmanr[0], aggregate_spearmanr_prob[0]))
         #############################
 
+        ## Dataset creation ##
         data = np.concatenate((running_outputs, running_outputs_prob, labels_predicted, running_labels, running_targets, running_folds), axis=1)
         dataframe = DataFrame(data=data, columns=('nn_output_label0','nn_output_label1','nn_output_prob_label0','nn_output_prob_label1','label_prediction', 'label','EMOGAS index','fold'))
         information_columns = dataload_ut.get_columns_from_informationdict(running_informations)
-        dataframe['bimbo_name'], dataframe['classe'], dataframe['esame_name'], dataframe['paziente'], dataframe['valore'], dataframe['video_name'] = information_columns
+        dataframe['bimbo_name'], dataframe['classe'], dataframe['esame_name'], dataframe['paziente'], dataframe['valore'], dataframe['video_name'], dataframe['processed_video_name'], dataframe['total_clip_frames'] = information_columns
+        #############################
 
+        ## Save results ##
         dataframe.to_csv(ALLFOLD_MODELS_FOLDER+'evaluation_dataframe.csv')
         f = open(ALLFOLD_MODELS_FOLDER + "evaluation_aggregate_metrics.txt", "x")
         f.write('Aggregate accuracy: {}\nAggregate spearmanr: {}, p_value: {}\nAggregate spearmanr_prob: {}, p_value: {}'.format(aggregate_accuracy, aggregate_spearmanr[0], aggregate_spearmanr[1], aggregate_spearmanr_prob[0], aggregate_spearmanr_prob[1]))
         f.close()
-
+        #############################
 
 

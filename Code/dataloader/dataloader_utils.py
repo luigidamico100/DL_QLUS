@@ -111,13 +111,16 @@ def default_mat_loader(path, num_rows=NUM_ROWS, return_value=False, mode='fixed_
         data = matdata[f][:num_rows]
 
     if get_information:
+        processed_video_path = path.split('/')
         information_dit = {
             'bimbo_name': str(matdata['bimbo_name'][0]),
             'classe': str(matdata['classe'][0]),
             'esame_name': str(matdata['esame_name'][0]),
             'paziente': str(matdata['paziente'][0][0]),
             'valore': str(matdata['valore'][0][0]),
-            'video_name': str(matdata['video_name'][0])
+            'video_name': str(matdata['video_name'][0]),
+            'processed_video_name': processed_video_path[-2] + '/' + processed_video_path[-1],
+            'total_clip_frames': len(data)
             }
         return data, float(valore.item()/480.), information_dit
     else:
@@ -153,7 +156,6 @@ class LUSFolder(DatasetFolder):  # eredita da DatasetFolder
         self.both_indicies = both_indicies
         self.get_information = get_information
         self.mode = mode
-
         self.transform = train_img_transform(num_rows) if train_phase else test_img_transform(num_rows)
 
         if loader is None:
@@ -373,30 +375,26 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=
 
 def get_columns_from_informationdict(all_informations):
     col_bimbo_name = [None] * len(all_informations)
-    for idx, informations in enumerate(all_informations):
-        col_bimbo_name[idx] = informations['bimbo_name']
-        
     col_classe = [None] * len(all_informations)
-    for idx, informations in enumerate(all_informations):
-        col_classe[idx] = informations['classe']
-        
     col_esame_name = [None] * len(all_informations)
-    for idx, informations in enumerate(all_informations):
-        col_esame_name[idx] = informations['esame_name']
-
     col_paziente = [None] * len(all_informations)
-    for idx, informations in enumerate(all_informations):
-        col_paziente[idx] = informations['paziente']
-        
     col_valore = [None] * len(all_informations)
-    for idx, informations in enumerate(all_informations):
-        col_valore[idx] = informations['valore']
-        
     col_video_name = [None] * len(all_informations)
-    for idx, informations in enumerate(all_informations):
+    col_processed_video_name = [None] * len(all_informations)
+    col_total_clip_frames = [None] * len(all_informations)
+
+    for idx, informations in enumerate(all_informations):    
+        col_bimbo_name[idx] = informations['bimbo_name']
+        col_classe[idx] = informations['classe']
+        col_esame_name[idx] = informations['esame_name']
+        col_paziente[idx] = informations['paziente']
+        col_valore[idx] = informations['valore']
         col_video_name[idx] = informations['video_name']
+        col_processed_video_name[idx] = informations['processed_video_name']
+        col_total_clip_frames[idx] = informations['total_clip_frames']
     
-    return col_bimbo_name, col_classe, col_esame_name, col_paziente, col_valore, col_video_name
+    return col_bimbo_name, col_classe, col_esame_name, col_paziente, col_valore, col_video_name, col_processed_video_name, col_total_clip_frames
+
 
 
 #%%
@@ -410,7 +408,7 @@ mode = 'random_frame_from_clip'
 replicate_all_classes = 1
 classification = True
 both_indicies = True
-get_information = True if both_indicies else False
+get_information = True if both_indicies else False      # only main value can be change, not the one after the else
 
 if __name__ == '__main__':
     
