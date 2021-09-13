@@ -93,6 +93,7 @@ def default_mat_loader(path, num_rows=NUM_ROWS, return_value=False, mode='fixed_
     matdata = loadmat(path)
     valore = matdata['valore']
         
+    frame_keys = []
     if mode == 'fixed_number_of_frames':
         data = [matdata[k][:num_rows] for k in matdata.keys() if k.startswith('f') and len(k) < 3]
         data = data[:NUM_FRAMES]
@@ -104,23 +105,43 @@ def default_mat_loader(path, num_rows=NUM_ROWS, return_value=False, mode='fixed_
         data = np.delete(data, 0, 3)
         data = np.delete(data, 0, 3)
     elif mode == 'entire_clip':
-        data = [matdata[k][:num_rows] for k in matdata.keys() if k.startswith('f') and len(k) < 3]
+        data = []
+        for k in matdata.keys():
+            if k.startswith('f') and len(k) < 3:
+                data.append(matdata[k][:num_rows])
+                frame_keys.append(k)
         data = np.array(data)
     elif mode == 'random_frame_from_clip' or mode == 'random_frame_from_clip_old':
         f = choice([k for k in matdata.keys() if k.startswith('f') and len(k) < 3])
         data = matdata[f][:num_rows]
 
+    
     if get_information:
-        processed_video_path = path.split('/')
-        information_dit = {
-            'bimbo_name': str(matdata['bimbo_name'][0]),
-            'classe': str(matdata['classe'][0]),
-            'esame_name': str(matdata['esame_name'][0]),
-            'paziente': str(matdata['paziente'][0][0]),
-            'valore': str(matdata['valore'][0][0]),
-            'video_name': str(matdata['video_name'][0]),
-            'processed_video_name': processed_video_path[-2] + '/' + processed_video_path[-1],
-            'total_clip_frames': len(data)
+        if len(frame_keys) > 0:
+            processed_video_path = path.split('/')
+            information_dit = [{
+                'bimbo_name': str(matdata['bimbo_name'][0]),
+                'classe': str(matdata['classe'][0]),
+                'esame_name': str(matdata['esame_name'][0]),
+                'paziente': str(matdata['paziente'][0][0]),
+                'valore': str(matdata['valore'][0][0]),
+                'video_name': str(matdata['video_name'][0]),
+                'processed_video_name': processed_video_path[-2] + '/' + processed_video_path[-1],
+                'frame_key': k, 
+                'total_clip_frames': len(data)
+                } for k in frame_keys]
+        else:
+            processed_video_path = path.split('/')
+            information_dit = {
+                'bimbo_name': str(matdata['bimbo_name'][0]),
+                'classe': str(matdata['classe'][0]),
+                'esame_name': str(matdata['esame_name'][0]),
+                'paziente': str(matdata['paziente'][0][0]),
+                'valore': str(matdata['valore'][0][0]),
+                'video_name': str(matdata['video_name'][0]),
+                'processed_video_name': processed_video_path[-2] + '/' + processed_video_path[-1],
+                'frame_key': 'None', 
+                'total_clip_frames': len(data)
             }
         return data, float(valore.item()/480.), information_dit
     else:
@@ -265,6 +286,9 @@ def show_images(data_loader, batches=10):
 
 def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=False, replicate_minority_classes=True, fold_test=0, fold_val=None, batch_size=32, num_workers=4, replicate_all_classes=10, mode='fixed_number_of_frames',
                            train_samples=True, val_samples=True, test_samples=True, get_information=False):
+    
+    get_information = get_information if (both_indicies and not train_samples) else False   #This cases have not been implemented
+    
     print('\n\n---------- Creating datasets and dataloaders ----------')
     if fold_val is None: fold_val = fold_test - 1
     print('Validation fold:', fold_val, ', Test fold:', fold_test)
@@ -317,7 +341,7 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=
                     X += x
                     Y1 += [y1] * len(x)
                     Y2 += [y2] * len(x)
-                    INF += [inf] * len(x)
+                    INF += inf
                 Y1 = torch.Tensor(Y1)
                 Y2 = torch.Tensor(Y2)
                 X = torch.stack(X)
@@ -381,6 +405,7 @@ def get_columns_from_informationdict(all_informations):
     col_valore = [None] * len(all_informations)
     col_video_name = [None] * len(all_informations)
     col_processed_video_name = [None] * len(all_informations)
+    col_frame_key = [None] * len(all_informations)
     col_total_clip_frames = [None] * len(all_informations)
 
     for idx, informations in enumerate(all_informations):    
@@ -391,9 +416,10 @@ def get_columns_from_informationdict(all_informations):
         col_valore[idx] = informations['valore']
         col_video_name[idx] = informations['video_name']
         col_processed_video_name[idx] = informations['processed_video_name']
+        col_frame_key[idx] = informations['frame_key']
         col_total_clip_frames[idx] = informations['total_clip_frames']
     
-    return col_bimbo_name, col_classe, col_esame_name, col_paziente, col_valore, col_video_name, col_processed_video_name, col_total_clip_frames
+    return col_bimbo_name, col_classe, col_esame_name, col_paziente, col_valore, col_video_name, col_processed_video_name, col_frame_key, col_total_clip_frames
 
 
 
@@ -408,7 +434,7 @@ mode = 'random_frame_from_clip'
 replicate_all_classes = 1
 classification = True
 both_indicies = True
-get_information = True if both_indicies else False      # only main value can be change, not the one after the else
+get_information = True if both_indicies else False
 
 if __name__ == '__main__':
     
