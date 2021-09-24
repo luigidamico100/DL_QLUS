@@ -287,7 +287,8 @@ def show_images(data_loader, batches=10):
 def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=False, replicate_minority_classes=True, fold_test=0, fold_val=None, batch_size=32, num_workers=4, replicate_all_classes=10, mode='fixed_number_of_frames',
                            train_samples=True, val_samples=True, test_samples=True, get_information=False):
     
-    get_information = get_information if (both_indicies and not train_samples) else False   #This cases have not been implemented
+    # get_information = get_information if (both_indicies and not train_samples) else False   #This cases have not been implemented
+    get_information = get_information if (both_indicies) else False   #This cases have not been implemented
     
     print('\n\n---------- Creating datasets and dataloaders ----------')
     if fold_val is None: fold_val = fold_test - 1
@@ -434,14 +435,14 @@ mode = 'random_frame_from_clip'
 replicate_all_classes = 1
 classification = True
 both_indicies = True
-get_information = True if both_indicies else False
+get_information = True
 
 if __name__ == '__main__':
     
     dataloaders_dict, datasets_dict = get_mat_dataloaders_v2(classification_classes, basePath=DATASET_PATH, num_workers=num_workers, fold_test=fold_test,
                                                                                    batch_size=batch_size, mode=mode, replicate_all_classes=replicate_all_classes,
                                                                                    target_value=not classification, both_indicies=both_indicies, get_information=get_information,
-                                                                                   train_samples=False, val_samples=False, test_samples=True)
+                                                                                   train_samples=True, val_samples=False, test_samples=True)
 
 
     # train_dl = dataloaders_dict['train']

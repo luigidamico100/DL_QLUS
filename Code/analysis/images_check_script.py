@@ -14,19 +14,6 @@ from scipy.io import loadmat
 import pims
 
 
-def create_ospedale_column(dataset):
-    ospedale_col = pd.Series(index=dataset.index, dtype=object)
-    for idx in dataset.index:
-        bimbo_name = dataset.loc[idx]['bimbo_name']
-        if 'Buzzi' in bimbo_name:
-            ospedale_col.loc[idx] = 'Milan'
-        elif 'Firenze' in bimbo_name:
-            ospedale_col.loc[idx] = 'Florence'
-        else:
-            ospedale_col.loc[idx] = 'Naples'
-    return ospedale_col
-    
-
 def evaluate_dataset(dataset):
     dataset_wrong_prediction = dataset[dataset['label_prediction'] != dataset['label']]
     dataset_right_prediction = dataset[dataset['label_prediction'] == dataset['label']]
