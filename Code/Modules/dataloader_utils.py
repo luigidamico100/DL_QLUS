@@ -379,7 +379,7 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=
         
     if mode == 'random_frame_from_clip':
         collate = collate_fn
-        batch_size = math.ceil(batch_size/16)
+        batch_size = math.ceil(batch_size/10)
     else:
         collate = None
         

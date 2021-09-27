@@ -8,13 +8,15 @@ Created on Fri Sep 24 01:25:01 2021
 
 import dataloader_utils as dataload_ut
 import pandas as pd
+from config import DATASET_PATH, DATASET_RAW_PATH
+import matplotlib.pyplot as plt
 
 #%%
 
 
 def create_and_save_dataframe_train(out_path='../../Experiments/train_dataset.csv'):
     '''
-    Create the dataframe containing information about all the train batch for all folds
+    Create the dataframe containing information about all the train batches for all folds
     '''
     train_dict_info = {
         'bimbo_name': [],
@@ -70,9 +72,71 @@ def create_ospedale_column(dataset):
     return ospedale_col
 
 
+def evaluate_dataset(dataset):
+    '''
+    Split the dataset into wrongPrediction and rightPrediction datasets
+    '''
+    dataset_wrongPrediction = dataset[dataset['label_prediction'] != dataset['label']]
+    dataset_rightPrediction = dataset[dataset['label_prediction'] == dataset['label']]
+    accuracy = len(dataset_rightPrediction) / len(dataset)
+    return (dataset_rightPrediction, dataset_wrongPrediction), accuracy
 
 
+def create_dataset_videoLevel(dataset):
+    '''
+    Create dataset at video Level
+    '''
+    dataset_videoLevel = dataset.groupby(['video_name','ospedale','bimbo_name'], as_index=False).mean().set_index('video_name')
+    dataset_videoLevel['label_prediction_videoLevel'] = (dataset_videoLevel['nn_output_prob_label1'] > 0.5).astype('float')
+    dataset_videoLevel_wrong_prediction = dataset_videoLevel[dataset_videoLevel['label_prediction_videoLevel'] != dataset_videoLevel['label']]
+    dataset_videoLevel_right_prediction = dataset_videoLevel[dataset_videoLevel['label_prediction_videoLevel'] == dataset_videoLevel['label']]
+    accuracy = len(dataset_videoLevel_right_prediction) / len(dataset_videoLevel)
+    print('Accuracy videoLevel: {:.3f}'.format(accuracy))
+    return (dataset_videoLevel, dataset_videoLevel_right_prediction, dataset_videoLevel_wrong_prediction), accuracy
 
+
+def analyze_one_video_prediction(dataset, idx):
+    '''
+    Plot frames of a specific video.
+    Shows which one is correctly or wrongly predicted
+    '''
+    dataset_wrong_prediction = dataset[dataset['label_prediction'] != dataset['label']]
+    dataset_right_prediction = dataset[dataset['label_prediction'] == dataset['label']]
+    sample = dataset.loc[idx]
+    video_name = sample['video_name']
+    print("Taking video: "+video_name)
+    wrong_prediction = dataset_wrong_prediction[dataset_wrong_prediction['video_name'] == video_name]
+    right_prediction = dataset_right_prediction[dataset_right_prediction['video_name'] == video_name]
+    n_frame_wrong = len(wrong_prediction)
+    n_frame_right = len(right_prediction) 
+    print('{} frames predicted wrong out of {} total'.format(n_frame_wrong, n_frame_wrong+n_frame_right))
+    
+    ### Load raw img   
+    if sample['classe'] == 'BEST':
+        clip_raw_path = DATASET_RAW_PATH + '/' + sample['classe'] + '/' + sample['bimbo_name'] + '/' + sample['video_name']
+    else:
+        clip_raw_path = DATASET_RAW_PATH + '/' + sample['classe'] + '/' + sample['bimbo_name'] + '/' +  sample['esame_name'] + '/' + sample['video_name']
+    clip_raw = pims.Video(clip_raw_path)
+    img_raw = clip_raw[-1]
+    
+    ### load mat imgs
+    clip_mat_path = DATASET_PATH + '/' + sample['processed_video_name']
+    matdata = loadmat(clip_mat_path)
+    
+    ### images showing
+    plt.imshow(img_raw), plt.show()
+    for idx in wrong_prediction.index:
+        k = wrong_prediction.loc[idx]['frame_key']
+        prob_label0 = wrong_prediction.loc[idx]['nn_output_prob_label0']
+        correct_label = wrong_prediction.loc[idx]['classe']
+        plt.imshow(matdata[k][:NUM_ROWS]), plt.title('{}, wrong prediction, correct: {}, prob_label0: {:.2f}'.format(k, correct_label, prob_label0)), plt.show()
+    
+    for idx in right_prediction.index:
+        k = right_prediction.loc[idx]['frame_key']
+        prob_label0 = right_prediction.loc[idx]['nn_output_prob_label0']
+        correct_label = right_prediction.loc[idx]['classe']
+        plt.imshow(matdata[k][:NUM_ROWS]), plt.title('{}, correct prediction, correct: {}, prob_label0: {:.2f}'.format(k, correct_label, prob_label0)), plt.show()
+    
 
 
 
