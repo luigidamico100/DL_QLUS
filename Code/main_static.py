@@ -42,7 +42,7 @@ if __name__ == '__main__':
         stat_mod_ut.plot_and_save(models, hist, out_folder=OUTFOLDER_PATH, info_text=info_text)
     
     else:
-        print("Output folder: {}!".format(OUTFOLDER_ALLFOLD_FOLDER))
+        print("Output folder: {}".format(OUTFOLDER_ALLFOLD_FOLDER))
         os.makedirs(OUTFOLDER_ALLFOLD_FOLDER, exist_ok=True)
         for fold_test in fold_test_list:
             dataloaders_dict, _ = dataload_ut.get_mat_dataloaders_v2(classification_classes, basePath=DATASET_PATH, num_workers=num_workers, fold_test=fold_test,
