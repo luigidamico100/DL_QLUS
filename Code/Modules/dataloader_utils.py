@@ -408,6 +408,7 @@ def get_columns_from_informationdict(all_informations):
     col_processed_video_name = [None] * len(all_informations)
     col_frame_key = [None] * len(all_informations)
     col_total_clip_frames = [None] * len(all_informations)
+    col_keys = [None] * len(all_informations)
 
     for idx, informations in enumerate(all_informations):    
         col_bimbo_name[idx] = informations['bimbo_name']
@@ -419,8 +420,9 @@ def get_columns_from_informationdict(all_informations):
         col_processed_video_name[idx] = informations['processed_video_name']
         col_frame_key[idx] = informations['frame_key']
         col_total_clip_frames[idx] = informations['total_clip_frames']
+        col_keys[idx] = informations['processed_video_name'] + '\t' + informations['frame_key']
     
-    return col_bimbo_name, col_classe, col_esame_name, col_paziente, col_valore, col_video_name, col_processed_video_name, col_frame_key, col_total_clip_frames
+    return col_bimbo_name, col_classe, col_esame_name, col_paziente, col_valore, col_video_name, col_processed_video_name, col_frame_key, col_total_clip_frames, col_keys
 
 
 
