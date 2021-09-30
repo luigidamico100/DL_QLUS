@@ -11,7 +11,6 @@ import pandas as pd
 
 
 #%%
-
 dataframe_train = pd.read_csv('../../Experiments/train_dataset.csv').drop('Unnamed: 0', axis=1)
 dataframe_complete = analysis_util.create_and_save_dataframe_complete(dataframe_train)
 dataframe_complete['ospedale'] = analysis_util.create_ospedale_column(dataframe_complete)
@@ -26,9 +25,5 @@ for ospedale in dataframe_complete['ospedale'].unique():
     for classe in dataframe_complete['classe'].unique():
         df = df_ospedale[df_ospedale['classe']==classe]
         print('Ospedale: '+ospedale+'\tClasse: ',classe, '\ttot samples: ', len(df))
-
-
-
-
 
 
