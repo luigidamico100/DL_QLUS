@@ -49,6 +49,7 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
     train_loss_history = []
     
     best_model_wts = copy.deepcopy(model.state_dict())
+    # last_model_wts = copy.deepcopy(model.state_dict())
     best_loss = 10000.0
 
     for epoch in range(num_epochs):
@@ -119,10 +120,9 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
             if phase == 'val' and epoch_loss < best_loss:
                 best_loss = epoch_loss
                 best_model_wts = copy.deepcopy(model.state_dict())
-                # best_outputs = outputs
-                # best_labels = labels
-            if phase == 'val' and epoch == num_epochs-1:
-                last_model_wts = copy.deepcopy(model.state_dict())
+                print('-> Best validation loss!')
+            # if phase == 'val' and epoch == num_epochs-1:
+                # last_model_wts = copy.deepcopy(model.state_dict())
             if phase == 'val':
                 val_metric_history.append(epoch_metric)
                 val_loss_history.append(epoch_loss)
@@ -139,8 +139,8 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
 
     model_best = model
     model_best.load_state_dict(best_model_wts)
-    model_last = model
-    model_last.load_state_dict(last_model_wts)
+    # model_last = model
+    # model_last.load_state_dict(last_model_wts)
        
     train_metric_history = [h.cpu().item() for h in train_metric_history]
     val_metric_history = [h.cpu().item() for h in val_metric_history]
@@ -150,8 +150,8 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
     hist[0] = ((str(criterion)),(train_loss_history, val_loss_history, test_loss_history))
     hist[1] = ((str(metric)),(train_metric_history, val_metric_history, test_metric_history))
     
-    models = (model_last, model_best)
-    return models, hist#, best_outputs, best_labels
+    models = (model_best, model_best)
+    return models, hist
 
 
 def eval_model(model, dataloader, score_fn, metric_fn, debug=False):
