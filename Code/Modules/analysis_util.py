@@ -13,7 +13,18 @@ from dataloader_utils import NUM_ROWS
 import matplotlib.pyplot as plt
 import pims
 from scipy.io import loadmat
-
+import numpy as np
+from config import ALLFOLD_MODELS_FOLDER, device, DATASET_PATH
+import pandas as pd
+import torch
+import dataloader_utils as dataload_ut
+import torch.nn.functional as F
+from captum.attr import IntegratedGradients
+from matplotlib.colors import LinearSegmentedColormap
+from captum.attr import visualization as viz
+import numpy as np
+import matplotlib.pyplot as plt
+from captum.attr import NoiseTunnel
 
 #%%
 
@@ -141,3 +152,33 @@ def analyze_one_video_prediction(dataset, idx):
         correct_label = right_prediction.loc[idx]['classe']
         plt.imshow(matdata[k][:NUM_ROWS]), plt.title('{}, correct prediction, correct: {}, prob_label0: {:.2f}'.format(k, correct_label, prob_label0)), plt.show()
     
+
+def show_sample_attribution(dataset, idx):
+    n_frame = int(idx[-1])
+    sample = dataset.loc[idx]
+    fold_test = int(sample['fold'])
+    clip_mat_path = DATASET_PATH + '/' + sample['processed_video_name']
+    mat_data = dataload_ut.default_mat_loader(clip_mat_path, mode='entire_clip')
+    img = mat_data[0][n_frame]
+    input = dataload_ut.test_img_transform(dataload_ut.NUM_ROWS)(image=img)['image'].unsqueeze(dim=0)
+    input_model_path = '../' + ALLFOLD_MODELS_FOLDER + 'exp_fold_{}/'.format(fold_test) + 'model_best.pt'
+    model = torch.load(input_model_path, map_location=device)  
+    output = model(input)
+    output = F.softmax(output, dim=1)
+    print('output: '+str(output)+'\nsaved prediction: '+str(sample['nn_output_prob_label0']) + '\t'+str(sample['nn_output_prob_label1']))
+    prediction_score, pred_label = torch.topk(output, 1)
+
+    integrated_gradients = IntegratedGradients(model)
+    attributions_ig = integrated_gradients.attribute(input, target=pred_label, n_steps=20)
+    default_cmap = LinearSegmentedColormap.from_list('custom blue', [(0, '#ffffff'), (0.25, '#000000'), (1, '#000000')], N=256)
+    attributions_ig_mod = np.transpose(attributions_ig.squeeze().cpu().detach().numpy(), (1,2,0))
+    transformed_img = input*0.1435 + 0.1250
+    transformed_img_mod = np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0))
+    _ = viz.visualize_image_attr_multiple(attributions_ig_mod,
+                                          transformed_img_mod,
+                                          ["original_image", "heat_map"],
+                                          ["all", "positive"],
+                                          cmap=default_cmap,
+                                          show_colorbar=True)
+    
+    return attributions_ig
