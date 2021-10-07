@@ -37,60 +37,55 @@ dataset_test_rightPrediction_florence_sick = dataset_test_rightPrediction_floren
 #%% Check extreme correct evaluation
 
 '''
-Very healthy patient, predicted correct. Naples
-Taking sample at idx=BEST/B_10_1_3.mat\tf0, EMOGAS idx = 476 (very high)
-Label = 0. Predicted NOT TOTALLY correct.
-Segmented pleural line. Horizontal arctifact. Black under the line.
+Healthy (Naples)
 '''
-sample_key = 'BEST/B_10_1_3.mat\tf0'
+sample_key = 'BEST/B_23_1_4.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path='/Users/luigidamico/Desktop/Thesis/Code/My code/repos/DL_QLUS/Experiments/experiment_allfold_exp_3/figures/'+sample_key.replace('/','-').replace('\t','')+'.png')
 analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
 _ = analysis_util.show_sample_attribution(dataset_test, sample_key)
 
 '''
-Very sick patient, predicted correct. Naples
-Taking sample at idx=RDS/R_34_1_3.mat\tf0, EMOGAS idx = 
-Label = 1. Predicted correct.
-Broken pleural line. Full of water. 
+Healthy (Naples)
+'''
+sample_key = 'BEST/B_7_1_6.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path='/Users/luigidamico/Desktop/Thesis/Code/My code/repos/DL_QLUS/Experiments/experiment_allfold_exp_3/figures/'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key)
+
+'''
+Healthy (Naples)
+'''
+sample_key = 'BEST/B_5_1_3.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path='/Users/luigidamico/Desktop/Thesis/Code/My code/repos/DL_QLUS/Experiments/experiment_allfold_exp_3/figures/'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key)
+
+'''
+RDS (Naples)
 '''
 sample_key = 'RDS/R_34_1_3.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path='/Users/luigidamico/Desktop/Thesis/Code/My code/repos/DL_QLUS/Experiments/experiment_allfold_exp_3/figures/'+sample_key.replace('/','-').replace('\t','')+'.png')
 analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
 _ = analysis_util.show_sample_attribution(dataset_test, sample_key)
 
+
 '''
-Very sick patient, predicted correct. Milan
-Taking sample at idx=RDS/R_34_1_3.mat\tf0, EMOGAS idx = 
-Label = 1. Predicted correct.
-Lot of vertical artififact
+RDS (Milan)
 '''
 sample_key = 'RDS/R_36_1_4.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path='/Users/luigidamico/Desktop/Thesis/Code/My code/repos/DL_QLUS/Experiments/experiment_allfold_exp_3/figures/'+sample_key.replace('/','-').replace('\t','')+'.png')
 analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
 _ = analysis_util.show_sample_attribution(dataset_test, sample_key)
 
 '''
-Very sick patient, predicted correct. Florence
-Taking sample at idx=RDS/R_29_1_5.mat\tf0, EMOGAS idx = 
-Label = 1. Predicted correct.
-Lot of water
+RDS (Florence)
 '''
 sample_key = 'RDS/R_29_1_5.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path='/Users/luigidamico/Desktop/Thesis/Code/My code/repos/DL_QLUS/Experiments/experiment_allfold_exp_3/figures/'+sample_key.replace('/','-').replace('\t','')+'.png')
 analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
 _ = analysis_util.show_sample_attribution(dataset_test, sample_key)
 
 
-#%% Check accuracies for each fold
-
-accuracies = []
-for fold in [0,1,2,3,4,5,6,7,8,9]:
-    dataset_test_fold = dataset_test[dataset_test['fold']==fold]
-    (_, _), acc = analysis_util.evaluate_dataset(dataset_test_fold)
-    print('computed acc: ', acc)
-    accuracies = accuracies + [acc]
-    hist_path = '/Users/luigidamico/Desktop/Thesis/Code/My code/repos/DL_QLUS/Experiments/experiment_allfold_exp_3/exp_fold_'+str(fold)+'/hist.pkl'
-    hist_data = pickle.load(open(hist_path,'rb'))
-    epoch_best_valLoss = np.array(hist_data[0][1][1]).argmin()
-    print('hist best acc: ', hist_data[1][1][2][epoch_best_valLoss])
-    print('hist last acc: ', hist_data[1][1][2][-1])
-    print()
 
 
 #%%
