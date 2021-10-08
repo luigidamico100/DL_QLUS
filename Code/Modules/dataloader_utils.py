@@ -95,8 +95,13 @@ def default_mat_loader(path, num_rows=NUM_ROWS, return_value=False, mode='fixed_
         
     frame_keys = []
     if mode == 'fixed_number_of_frames':
-        data = [matdata[k][:num_rows] for k in matdata.keys() if k.startswith('f') and len(k) < 3]
-        data = data[:NUM_FRAMES]
+        count_frames = 0
+        data = []
+        for k in matdata.keys():
+            if k.startswith('f') and len(k) < 3 and count_frames < NUM_FRAMES:
+                count_frames += 1
+                data.append(matdata[k][:num_rows])
+                frame_keys.append(k)
         data = np.array(data)
     elif mode == 'fixed_number_of_frames_1ch':
         data = [matdata[k][:num_rows] for k in matdata.keys() if k.startswith('f') and len(k) < 3]
@@ -308,7 +313,7 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=
                                       exclude_class=exclude_class, num_rows=NUM_ROWS, exclude_val_higher=450 if not target_value and class_name != 'BEST' else None, get_information=get_information))
             print('\t\t- TRAIN n. samples founded: ', len(train_ds[-1]))
             
-        mode_test = 'entire_clip' if mode=='random_frame_from_clip' else mode
+        mode_test = 'fixed_number_of_frames' if mode=='random_frame_from_clip' else mode
         
         if val_samples:
             val_ds.append(LUSFolder(root=basePath, train_phase=False, target_value=target_value, both_indicies=both_indicies, mode=mode_test, subset_in=CV_FOLD[class_name][fold_val],
@@ -379,7 +384,7 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=
         
     if mode == 'random_frame_from_clip':
         collate = collate_fn
-        batch_size = math.ceil(batch_size/10)
+        batch_size = math.ceil(batch_size/6)
     else:
         collate = None
         
@@ -431,7 +436,7 @@ classification_classes = ['BEST', 'RDS']
 DATASET_PATH  = '/Volumes/SD Card/ICPR/Dataset_processato/Dataset_f'
 num_workers = 0
 fold_test = 0
-batch_size = 32
+batch_size = 16
 # Mode to choose from [random_frame_from_clip_old, random_frame_from_clip, fixed_number_of_frames, fixed_number_of_frames_1ch]
 mode = 'random_frame_from_clip'
 replicate_all_classes = 1
