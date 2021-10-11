@@ -21,15 +21,15 @@ debug = False if on_cuda else True
 experiment_all_fold = True
 ''' Most common for training'''
 OUTFOLDER_PATH = '../Experiments/exp_9/'     # used in case experiment_all_fold=False
-OUTFOLDER_ALLFOLD_FOLDER = '../Experiments/experiment_allfold_exp_3/'    # used in case experiment_all_fold=True
+OUTFOLDER_ALLFOLD_FOLDER = '../Experiments/experiment_allfold_exp_5/'    # used in case experiment_all_fold=True
 classification = True
-batch_size = 64 if on_cuda else 4
-comment_text = "Both last and best model saved should be best model. Cound't fix the bug :("
+batch_size = 32 if on_cuda else 4
+comment_text = "Training for the new dataset update. CV_FOLD dict updated"
 
 ''' Model evaluation '''
 fold_test = 1
-MODEL_PATH = '../Experiments/experiment_allfold_exp_3/exp_fold_1/model_best.pt'
-ALLFOLD_MODELS_FOLDER = '../Experiments/experiment_allfold_exp_2/'
+MODEL_PATH = '../Experiments/experiment_allfold_exp_4/exp_fold_1/model_best.pt'
+ALLFOLD_MODELS_FOLDER = '../Experiments/experiment_allfold_exp_4/'
 
 
 ''' Problem definition parameters'''

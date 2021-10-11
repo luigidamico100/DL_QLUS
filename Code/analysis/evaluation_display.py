@@ -17,21 +17,31 @@ import numpy as np
 
 #%% Load dataset
 
-DATASET_RESULT_PATH = '../../Experiments/experiment_allfold_exp_3/evaluation_dataframe_final.csv'
+DATASET_RESULT_PATH = '../../Experiments/experiment_allfold_exp_4/evaluation_dataframe.csv'
 dataset_test = pd.read_csv(DATASET_RESULT_PATH, index_col='keys')
 dataset_test['ospedale'] = analysis_util.create_ospedale_column(dataset_test)
 
-(dataset_test_rightPrediction, dataset_test_wrongPrediction), accuracy_test = analysis_util.evaluate_dataset(dataset_test)
 
+
+(dataset_test_rightPrediction, dataset_test_wrongPrediction), accuracy_test = analysis_util.evaluate_dataset(dataset_test)
+(dataset_test_videoLevel, dataset_test_videoLevel_rightPrediction, dataset_test_videoLevel_wrongPrediction), accuracy = analysis_util.create_dataset_videoLevel(dataset_test)
+analysis_util.print_dataframe_stats(dataset_test_videoLevel)
+
+dataset_test_milan = dataset_test[dataset_test['ospedale']=='Milan']
 dataset_test_rightPrediction_milan = dataset_test_rightPrediction[dataset_test_rightPrediction['ospedale']=='Milan']
+dataset_test_wrongPrediction_milan = dataset_test_wrongPrediction[dataset_test_wrongPrediction['ospedale']=='Milan']
 dataset_test_rightPrediction_florence = dataset_test_rightPrediction[dataset_test_rightPrediction['ospedale']=='Florence']
 dataset_test_rightPrediction_naples = dataset_test_rightPrediction[dataset_test_rightPrediction['ospedale']=='Naples']
 dataset_test_rightPrediction_milan_healthy = dataset_test_rightPrediction_milan[dataset_test_rightPrediction_milan['label']==0]
+dataset_test_wrongPrediction_milan_healthy = dataset_test_wrongPrediction_milan[dataset_test_wrongPrediction_milan['label']==0]
 dataset_test_rightPrediction_milan_sick = dataset_test_rightPrediction_milan[dataset_test_rightPrediction_milan['label']==1]
 dataset_test_rightPrediction_naples_healthy = dataset_test_rightPrediction_naples[dataset_test_rightPrediction_naples['label']==0]
 dataset_test_rightPrediction_naples_sick = dataset_test_rightPrediction_naples[dataset_test_rightPrediction_naples['label']==1]
 dataset_test_rightPrediction_florence_healthy = dataset_test_rightPrediction_florence[dataset_test_rightPrediction_florence['label']==0]
 dataset_test_rightPrediction_florence_sick = dataset_test_rightPrediction_florence[dataset_test_rightPrediction_florence['label']==1]
+
+#%%
+
 
 
 #%% Check extreme correct evaluation
@@ -89,7 +99,7 @@ _ = analysis_util.show_sample_attribution(dataset_test, sample_key)
 
 
 #%%
-(dataset_test_videoLevel, dataset_test_videoLevel_rightPrediction, dataset_test_videoLevel_wrongPrediction), accuracy = analysis_util.create_dataset_videoLevel(dataset_test)
+
 
 
 

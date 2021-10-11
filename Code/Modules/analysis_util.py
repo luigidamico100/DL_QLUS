@@ -73,6 +73,7 @@ def create_and_save_dataframe_videos(dataframe_train, out_path='../../Experiment
     dataframe_videos.drop('fold', axis=1, inplace=True)
     dataframe_videos.to_csv(out_path)
     dataframe_videos['ospedale'] = create_ospedale_column(dataframe_videos)
+    dataframe_videos['filename'] = create_filename_column(dataframe_videos)
     return dataframe_videos
 
 
@@ -99,6 +100,13 @@ def create_ospedale_column(dataset):
             ospedale_col.loc[idx] = 'Naples'
     return ospedale_col
 
+def create_filename_column(dataset):
+    filename_col = pd.Series(index=dataset.index, dtype=object)
+    for idx in dataset.index:
+        processed_video_name = dataset.loc[idx]['processed_video_name']
+        filename_col.loc[idx] = processed_video_name.split('/')[1]
+    return filename_col
+
 
 def evaluate_dataset(dataset):
     '''
@@ -114,7 +122,7 @@ def create_dataset_videoLevel(dataset):
     '''
     Create dataset at video Level
     '''
-    dataset_videoLevel = dataset.groupby(['video_name','ospedale','bimbo_name'], as_index=False).mean().set_index('video_name')
+    dataset_videoLevel = dataset.groupby(['video_name','ospedale','bimbo_name','classe'], as_index=False).mean().set_index('video_name')
     dataset_videoLevel['label_prediction_videoLevel'] = (dataset_videoLevel['nn_output_prob_label1'] > 0.5).astype('float')
     dataset_videoLevel_wrong_prediction = dataset_videoLevel[dataset_videoLevel['label_prediction_videoLevel'] != dataset_videoLevel['label']]
     dataset_videoLevel_right_prediction = dataset_videoLevel[dataset_videoLevel['label_prediction_videoLevel'] == dataset_videoLevel['label']]
@@ -218,3 +226,14 @@ def show_training_histories_byFold(hists_path='/Users/luigidamico/Desktop/Thesis
         print('hist best epoch: ', epoch_best_valLoss+1)
         print('hist last test acc: ', hist_data[1][1][2][-1])
         print()
+        
+        
+def print_dataframe_stats(dataframe):
+    for ospedale in dataframe['ospedale'].unique():
+        df_ospedale = dataframe[dataframe['ospedale']==ospedale]
+        for classe in dataframe['classe'].unique():
+            df = df_ospedale[df_ospedale['classe']==classe]
+            print('Ospedale: '+ospedale+'\tClasse: ',classe, '\ttot samples: ', len(df)) 
+            
+            
+            

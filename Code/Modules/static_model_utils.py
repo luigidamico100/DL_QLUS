@@ -429,7 +429,7 @@ def plot_and_save(models, hist, out_folder, info_text):
         fig.savefig(out_folder+'history.jpg', dpi=300)
         
         (model_last, model_best) = models
-        torch.save(model_last, out_folder+'model_last.pt')
+        # torch.save(model_last, out_folder+'model_last.pt')
         torch.save(model_best, out_folder+'model_best.pt')
         f = open(out_folder + "info.txt", "w")
         f.write(info_text)
