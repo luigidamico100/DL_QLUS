@@ -118,12 +118,12 @@ def evaluate_dataset(dataset):
     return (dataset_rightPrediction, dataset_wrongPrediction), accuracy
 
 
-def create_dataset_videoLevel(dataset):
+def create_dataset_videoLevel(dataset, th=0.5):
     '''
     Create dataset at video Level
     '''
     dataset_videoLevel = dataset.groupby(['video_name','ospedale','bimbo_name','classe'], as_index=False).mean().set_index('video_name')
-    dataset_videoLevel['label_prediction_videoLevel'] = (dataset_videoLevel['nn_output_prob_label1'] > 0.5).astype('float')
+    dataset_videoLevel['label_prediction_videoLevel'] = (dataset_videoLevel['nn_output_prob_label1'] > th).astype('float')
     dataset_videoLevel_wrong_prediction = dataset_videoLevel[dataset_videoLevel['label_prediction_videoLevel'] != dataset_videoLevel['label']]
     dataset_videoLevel_right_prediction = dataset_videoLevel[dataset_videoLevel['label_prediction_videoLevel'] == dataset_videoLevel['label']]
     accuracy = len(dataset_videoLevel_right_prediction) / len(dataset_videoLevel)
@@ -152,15 +152,18 @@ def analyze_one_video_prediction(dataset, idx):
         clip_raw_path = DATASET_RAW_PATH + '/' + sample['classe'] + '/' + sample['bimbo_name'] + '/' + sample['video_name']
     else:
         clip_raw_path = DATASET_RAW_PATH + '/' + sample['classe'] + '/' + sample['bimbo_name'] + '/' +  sample['esame_name'] + '/' + sample['video_name']
-    clip_raw = pims.Video(clip_raw_path)
-    img_raw = clip_raw[-1]
+    try:
+        clip_raw = pims.Video(clip_raw_path)
+        img_raw = clip_raw[-1]
+        plt.imshow(img_raw), plt.show()
+    except:
+        print('No image raw found')
     
     ### load mat imgs
     clip_mat_path = DATASET_PATH + '/' + sample['processed_video_name']
     matdata = loadmat(clip_mat_path)
     
     ### images showing
-    plt.imshow(img_raw), plt.show()
     for idx in wrong_prediction.index:
         k = wrong_prediction.loc[idx]['frame_key']
         prob_label0 = wrong_prediction.loc[idx]['nn_output_prob_label0']
@@ -184,7 +187,7 @@ def save_video_frame(dataset, idx, out_file_path):
     plt.savefig(out_file_path)
     
 
-def show_sample_attribution(dataset, idx):
+def show_sample_attribution(dataset, idx, n_steps, out_file_path):
     n_frame = int(idx[-1])
     sample = dataset.loc[idx]
     fold_test = int(sample['fold'])
@@ -196,21 +199,22 @@ def show_sample_attribution(dataset, idx):
     model = torch.load(input_model_path, map_location=device)  
     output = model(input)
     output = F.softmax(output, dim=1)
-    print('output: '+str(output)+'\nsaved prediction: '+str(sample['nn_output_prob_label0']) + '\t'+str(sample['nn_output_prob_label1']))
     prediction_score, pred_label = torch.topk(output, 1)
 
     integrated_gradients = IntegratedGradients(model)
-    attributions_ig = integrated_gradients.attribute(input, target=pred_label, n_steps=20)
+    attributions_ig = integrated_gradients.attribute(input, target=pred_label, n_steps=n_steps)
     default_cmap = LinearSegmentedColormap.from_list('custom blue', [(0, '#ffffff'), (0.25, '#000000'), (1, '#000000')], N=256)
     attributions_ig_mod = np.transpose(attributions_ig.squeeze().cpu().detach().numpy(), (1,2,0))
     transformed_img = input*0.1435 + 0.1250
     transformed_img_mod = np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0))
-    _ = viz.visualize_image_attr_multiple(attributions_ig_mod,
+    fig, _ = viz.visualize_image_attr_multiple(attributions_ig_mod,
                                           transformed_img_mod,
                                           ["original_image", "heat_map"],
                                           ["all", "positive"],
                                           cmap=default_cmap,
                                           show_colorbar=True)
+    if out_file_path is not None:
+        fig.savefig(out_file_path, dpi=200)
     
     return attributions_ig
 

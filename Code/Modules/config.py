@@ -29,7 +29,7 @@ comment_text = "Training for the new dataset update. CV_FOLD dict updated"
 ''' Model evaluation '''
 fold_test = 1
 MODEL_PATH = '../Experiments/experiment_allfold_exp_4/exp_fold_1/model_best.pt'
-ALLFOLD_MODELS_FOLDER = '../Experiments/experiment_allfold_exp_4/'
+ALLFOLD_MODELS_FOLDER = '../Experiments/experiment_allfold_exp_5/'
 
 
 ''' Problem definition parameters'''
