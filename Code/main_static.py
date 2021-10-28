@@ -23,8 +23,8 @@ if __name__ == '__main__':
 #%% Set up model architecture
 
     model_ft, _ = stat_mod_ut.initialize_model(model_name, classification, num_classes, feature_extract, use_pretrained=use_pretrained)
-    # print(model_ft)
-    # stat_mod_ut.print_model_parameters(model_ft)
+    print(model_ft)
+    stat_mod_ut.print_model_parameters(model_ft)
     params_to_update = stat_mod_ut.get_params_to_update(model_ft, feature_extract)
     # optimizer_ft = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
     optimizer_ft = optim.Adam(params_to_update, lr=lr)

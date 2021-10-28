@@ -21,15 +21,15 @@ debug = False if on_cuda else True
 experiment_all_fold = True
 ''' Most common for training'''
 OUTFOLDER_PATH = '../Experiments/exp_9/'     # used in case experiment_all_fold=False
-OUTFOLDER_ALLFOLD_FOLDER = '../Experiments/experiment_allfold_exp_5/'    # used in case experiment_all_fold=True
+OUTFOLDER_ALLFOLD_FOLDER = '../Experiments/experiment_allfold_exp_7/'    # used in case experiment_all_fold=True
 classification = True
 batch_size = 32 if on_cuda else 4
-comment_text = "Training for the new dataset update. CV_FOLD dict updated"
+comment_text = "Training with EfficientNet-b1"
 
 ''' Model evaluation '''
 fold_test = 1
-MODEL_PATH = '../Experiments/experiment_allfold_exp_4/exp_fold_1/model_best.pt'
-ALLFOLD_MODELS_FOLDER = '../Experiments/experiment_allfold_exp_5/'
+MODEL_PATH = '../Experiments/experiment_allfold_exp_7/exp_fold_1/model_best.pt'
+ALLFOLD_MODELS_FOLDER = '../Experiments/experiment_allfold_exp_7/'
 
 
 ''' Problem definition parameters'''
@@ -39,7 +39,7 @@ mode = 'random_frame_from_clip'
 
 ''' Model parameters '''
 # Models to choose from [resnet (11M params), efficientnet-b0 (4M params), alexnet, vgg, squeezenet, densenet, inception]
-model_name = 'efficientnet-b0'
+model_name = 'efficientnet-b1'
 use_pretrained = True
 feature_extract = False     #Set to False to fine-tune the model.
 

@@ -123,9 +123,9 @@ def create_dataset_videoLevel(dataset, th=0.5):
     Create dataset at video Level
     '''
     dataset_videoLevel = dataset.groupby(['video_name','ospedale','bimbo_name','classe'], as_index=False).mean().set_index('video_name')
-    dataset_videoLevel['label_prediction_videoLevel'] = (dataset_videoLevel['nn_output_prob_label1'] > th).astype('float')
-    dataset_videoLevel_wrong_prediction = dataset_videoLevel[dataset_videoLevel['label_prediction_videoLevel'] != dataset_videoLevel['label']]
-    dataset_videoLevel_right_prediction = dataset_videoLevel[dataset_videoLevel['label_prediction_videoLevel'] == dataset_videoLevel['label']]
+    dataset_videoLevel['label_prediction'] = (dataset_videoLevel['nn_output_prob_label1'] > th).astype('float')
+    dataset_videoLevel_wrong_prediction = dataset_videoLevel[dataset_videoLevel['label_prediction'] != dataset_videoLevel['label']]
+    dataset_videoLevel_right_prediction = dataset_videoLevel[dataset_videoLevel['label_prediction'] == dataset_videoLevel['label']]
     accuracy = len(dataset_videoLevel_right_prediction) / len(dataset_videoLevel)
     print('Accuracy videoLevel: {:.3f}'.format(accuracy))
     return (dataset_videoLevel, dataset_videoLevel_right_prediction, dataset_videoLevel_wrong_prediction), accuracy
@@ -184,10 +184,10 @@ def save_video_frame(dataset, idx, out_file_path):
     k = sample['frame_key']
     plt.imshow(matdata[k][:NUM_ROWS])
     plt.axis('off')
-    plt.savefig(out_file_path)
+    plt.savefig(out_file_path, dpi=100)
     
 
-def show_sample_attribution(dataset, idx, n_steps, out_file_path):
+def show_sample_attribution(dataset, idx, n_steps, show_original_img=True, out_file_path=None):
     n_frame = int(idx[-1])
     sample = dataset.loc[idx]
     fold_test = int(sample['fold'])
@@ -196,7 +196,7 @@ def show_sample_attribution(dataset, idx, n_steps, out_file_path):
     img = mat_data[0][n_frame]
     input = dataload_ut.test_img_transform(dataload_ut.NUM_ROWS)(image=img)['image'].unsqueeze(dim=0)
     input_model_path = '../' + ALLFOLD_MODELS_FOLDER + 'exp_fold_{}/'.format(fold_test) + 'model_best.pt'
-    model = torch.load(input_model_path, map_location=device)  
+    model = torch.load(input_model_path, map_location=device)
     output = model(input)
     output = F.softmax(output, dim=1)
     prediction_score, pred_label = torch.topk(output, 1)
@@ -207,14 +207,23 @@ def show_sample_attribution(dataset, idx, n_steps, out_file_path):
     attributions_ig_mod = np.transpose(attributions_ig.squeeze().cpu().detach().numpy(), (1,2,0))
     transformed_img = input*0.1435 + 0.1250
     transformed_img_mod = np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0))
-    fig, _ = viz.visualize_image_attr_multiple(attributions_ig_mod,
-                                          transformed_img_mod,
-                                          ["original_image", "heat_map"],
-                                          ["all", "positive"],
-                                          cmap=default_cmap,
-                                          show_colorbar=True)
+    if show_original_img:
+        fig, _ = viz.visualize_image_attr_multiple(attributions_ig_mod,
+                                              transformed_img_mod,
+                                              ["original_image", "heat_map"],
+                                              ["all", "positive"],
+                                              cmap=default_cmap,
+                                              show_colorbar=True)
+    else:
+        fig, _ = viz.visualize_image_attr(attributions_ig_mod,
+                                              transformed_img_mod,
+                                              method="heat_map",
+                                              sign="positive",
+                                              cmap=default_cmap,
+                                              show_colorbar=True)
+            
     if out_file_path is not None:
-        fig.savefig(out_file_path, dpi=200)
+        fig.savefig(out_file_path, dpi=200, transparent=True)
     
     return attributions_ig
 
