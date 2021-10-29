@@ -66,13 +66,13 @@ train_img_transform = lambda num_rows : A.Compose([
     # A.RandomCrop(height=num_rows, width=NUM_COLUMNS),
     A.HorizontalFlip(p=0.5),
     A.Rotate(limit=10, p=1.0, border_mode=(cv2.BORDER_CONSTANT)),
-    # A.ColorJitter(.15, .15),          #it raise an error for video-mode
-    A.RandomBrightnessContrast(p=0.2),
+    A.ColorJitter(.25, .25, p=.5),          #it raise an error for video-mode
+    # A.RandomBrightnessContrast(p=0.5),
     ToFloat(max_value=(255)),
     A.Normalize(mean = 0.1250, std = 0.1435, max_pixel_value=1.0),
-    #A.Normalize(mean = 0.5, std = 0.5, max_pixel_value=1.0),
+    # A.Normalize(mean = 0.5, std = 0.5, max_pixel_value=1.0),
     ToTensorV2(),
-    #output: torch.Size([C, H, W])
+    # output: torch.Size([C, H, W])
 ])
 
 test_img_transform = lambda num_rows : A.Compose([
