@@ -26,6 +26,7 @@ import matplotlib.pyplot as plt
 from captum.attr import NoiseTunnel
 import pickle
 from dataloader_utils import train_img_transform
+from dataloader_utils_old import train_transform as train_img_transform_old
 
 #%%
 
@@ -191,13 +192,13 @@ def get_video_frame(dataset, idx, show=True, out_file_path=None):
     return img
     
 
-def show_augmentations(dataset, idx, num_aug=2, out_file_path=None):
+def show_augmentations(dataset, idx, num_aug=2, out_file_path=None, old_transformation=False):
     img = get_video_frame(dataset, idx, show=False)
     plt.subplot(3,3,1)
     plt.imshow(img), plt.axis('off'), plt.title('Original image')
-    transf = train_img_transform(NUM_ROWS)
+    transf = train_img_transform(NUM_ROWS) if not old_transformation else train_img_transform_old(NUM_ROWS)
     for i in range(2,num_aug+2):
-        aug_img = transf(image=img)['image']
+        aug_img = transf(image=img)['image'] if not old_transformation else transf(img)
         aug_img_rescaled = ((aug_img - aug_img.min()) / (aug_img.max() - aug_img.min())).permute(1,2,0)
         idx_plot = i if i<=3 else i+1
         idx_plot = idx_plot if idx_plot <= 6 else idx_plot+1
