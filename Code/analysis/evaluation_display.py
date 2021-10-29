@@ -14,31 +14,15 @@ import analysis_util
 import pickle
 import numpy as np
 from sklearn.metrics import confusion_matrix, accuracy_score
+from dataloader_utils import train_img_transform
+from dataloader_utils import NUM_ROWS
+import matplotlib
 
 
 #%% Load dataset
+RESULT_PATH = '/Volumes/SD Card/Thesis/Experiments/experiment_allfold_exp_5/'
 
-def print_metrics(dataset):
-    print(accuracy_score(dataset['label'], dataset['label_prediction']))
-    print(confusion_matrix(dataset['label'], dataset['label_prediction']))
-    print('------------------Naples') 
-    dataset_naples = dataset[dataset['ospedale']=='Naples']
-    print(accuracy_score(dataset_naples['label'], dataset_naples['label_prediction']))
-    print(confusion_matrix(dataset_naples['label'], dataset_naples['label_prediction'], normalize='true'))
-    print(confusion_matrix(dataset_naples['label'], dataset_naples['label_prediction']))
-    print('------------------Florence')
-    dataset_florence = dataset[dataset['ospedale']=='Florence']
-    print(accuracy_score(dataset_florence['label'], dataset_florence['label_prediction']))
-    print(confusion_matrix(dataset_florence['label'], dataset_florence['label_prediction'], normalize='true'))
-    print(confusion_matrix(dataset_florence['label'], dataset_florence['label_prediction']))
-    print('------------------Milan')
-    dataset_milan = dataset[dataset['ospedale']=='Milan']
-    print(accuracy_score(dataset_milan['label'], dataset_milan['label_prediction']))
-    print(confusion_matrix(dataset_milan['label'], dataset_milan['label_prediction'], normalize='true'))
-    print(confusion_matrix(dataset_milan['label'], dataset_milan['label_prediction']))
-    
-
-DATASET_RESULT_PATH = '../../Experiments/experiment_allfold_exp_5/evaluation_dataframe_final.csv'
+DATASET_RESULT_PATH = RESULT_PATH + 'evaluation_dataframe_final.csv'
 dataset_test = pd.read_csv(DATASET_RESULT_PATH, index_col='keys')
 dataset_test['ospedale'] = analysis_util.create_ospedale_column(dataset_test)
 
@@ -57,7 +41,15 @@ dataset_test_wrongPrediction_milan_healthy = dataset_test_wrongPrediction_milan[
 dataset_test_wrongPrediction_milan_RDS = dataset_test_wrongPrediction_milan[dataset_test_wrongPrediction_milan['label']==1]
 dataset_test_wrongPrediction_naples_RDS = dataset_test_wrongPrediction_naples[dataset_test_wrongPrediction_naples['label']==1]
 
-out_file_folder = '/Users/luigidamico/Desktop/Thesis/Code/My code/repos/DL_QLUS/Experiments/experiment_allfold_exp_5/figures/'
+out_file_folder = RESULT_PATH+ 'figures/'
+
+
+#%%
+sample_key = 'BEST/B_70_1_2.mat\tf0'
+sample_key = 'BEST/B_23_1_4.mat\tf0'
+sample_key = 'BEST/B_86_1_7.mat\tf0'
+analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg')
+
 
 #%% Check extreme correct evaluation
 
@@ -65,7 +57,7 @@ out_file_folder = '/Users/luigidamico/Desktop/Thesis/Code/My code/repos/DL_QLUS/
 Healthy (Naples)
 '''
 sample_key = 'BEST/B_23_1_4.mat\tf0'
-analysis_util.save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'NaplesHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
+img = analysis_util.get_and_save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'NaplesHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
 analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
 _ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=5, show_original_img=True, out_file_path=out_file_folder+'Attribution_NaplesHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
 
@@ -73,7 +65,7 @@ _ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=5, s
 Healthy (Milan)
 '''
 sample_key = 'BEST/B_86_1_7.mat\tf0'
-analysis_util.save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'MilanHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.get_and_save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'MilanHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
 analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
 _ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=20, show_original_img=True, out_file_path=out_file_folder+'Attribution_MilanHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
 

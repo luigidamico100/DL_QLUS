@@ -12,7 +12,7 @@ import pandas as pd
 
 #%%
 # analysis_util.create_and_save_dataframe_train(out_path='../../Experiments/train_dataset_target_value.csv', target_value=True)
-dataframe_train = pd.read_csv('../../Experiments/train_dataset.csv').drop('Unnamed: 0', axis=1)
+dataframe_train = pd.read_csv('/Volumes/SD Card/Thesis/Experiments/train_dataset.csv').drop('Unnamed: 0', axis=1)
 dataframe_videos = analysis_util.create_and_save_dataframe_videos(dataframe_train)
 dataframe_patients = analysis_util.create_and_save_dataframe_patients(dataframe_videos)
 

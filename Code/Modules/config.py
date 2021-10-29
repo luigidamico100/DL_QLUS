@@ -12,8 +12,8 @@ from torchmetrics import Accuracy, MeanAbsolutePercentageError
 
 on_cuda = torch.cuda.is_available()
 device = torch.device("cuda:0" if on_cuda else "cpu")
-DATASET_PATH = '/mnt/disk2/diego.gragnaniello/Eco/ICPR/Dataset_processato/Dataset_f' if on_cuda else '/Volumes/SD Card/ICPR/Dataset_processato/Dataset_f'
-DATASET_RAW_PATH = '/mnt/disk2/diego.gragnaniello/Eco/ICPR/Dataset_RAW' if on_cuda else '/Volumes/SD Card/ICPR/Dataset_RAW'
+DATASET_PATH = '/mnt/disk2/diego.gragnaniello/Eco/ICPR/Dataset_processato/Dataset_f' if on_cuda else '/Volumes/SD Card/Thesis/ICPR/Dataset_processato/Dataset_f'
+DATASET_RAW_PATH = '/mnt/disk2/diego.gragnaniello/Eco/ICPR/Dataset_RAW' if on_cuda else '/Volumes/SD Card/Thesis/ICPR/Dataset_RAW'
 num_workers = 0
 debug = False if on_cuda else True
 

@@ -8,13 +8,12 @@ Created on Fri Sep 24 01:25:01 2021
 
 import dataloader_utils as dataload_ut
 import pandas as pd
-from config import DATASET_PATH, DATASET_RAW_PATH
 from dataloader_utils import NUM_ROWS
 import matplotlib.pyplot as plt
 import pims
 from scipy.io import loadmat
 import numpy as np
-from config import ALLFOLD_MODELS_FOLDER, device, DATASET_PATH
+from config import ALLFOLD_MODELS_FOLDER, device, DATASET_PATH, DATASET_RAW_PATH
 import pandas as pd
 import torch
 import dataloader_utils as dataload_ut
@@ -26,6 +25,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from captum.attr import NoiseTunnel
 import pickle
+from dataloader_utils import train_img_transform
 
 #%%
 
@@ -177,15 +177,36 @@ def analyze_one_video_prediction(dataset, idx):
         fig = plt.imshow(matdata[k][:NUM_ROWS]), plt.title('{}, correct prediction, correct: {}, prob_label0: {:.2f}'.format(k, correct_label, prob_label0)), plt.show()
 
 
-def save_video_frame(dataset, idx, out_file_path):
+def get_video_frame(dataset, idx, show=True, out_file_path=None):
     sample = dataset.loc[idx]
     clip_mat_path = DATASET_PATH + '/' + sample['processed_video_name']
     matdata = loadmat(clip_mat_path)
     k = sample['frame_key']
-    plt.imshow(matdata[k][:NUM_ROWS])
-    plt.axis('off')
-    plt.savefig(out_file_path, dpi=100)
+    img = matdata[k][:NUM_ROWS]
+    if show:
+        plt.imshow(img)
+        plt.axis('off')
+        if out_file_path is not None:
+            plt.savefig(out_file_path, dpi=100)
+    return img
     
+
+def show_augmentations(dataset, idx, num_aug=2, out_file_path=None):
+    img = get_video_frame(dataset, idx, show=False)
+    plt.subplot(3,3,1)
+    plt.imshow(img), plt.axis('off'), plt.title('Original image')
+    transf = train_img_transform(NUM_ROWS)
+    for i in range(2,num_aug+2):
+        aug_img = transf(image=img)['image']
+        aug_img_rescaled = ((aug_img - aug_img.min()) / (aug_img.max() - aug_img.min())).permute(1,2,0)
+        idx_plot = i if i<=3 else i+1
+        idx_plot = idx_plot if idx_plot <= 6 else idx_plot+1
+        plt.subplot(3,3,idx_plot)
+        plt.imshow(aug_img_rescaled), plt.axis('off'), plt.title('Augmented image, ex.'+str(i-1), fontsize='small')
+
+    if out_file_path:
+        plt.savefig(out_file_path, dpi=300)
+
 
 def show_sample_attribution(dataset, idx, n_steps, show_original_img=True, out_file_path=None):
     n_frame = int(idx[-1])
@@ -247,6 +268,26 @@ def print_dataframe_stats(dataframe):
         for classe in dataframe['classe'].unique():
             df = df_ospedale[df_ospedale['classe']==classe]
             print('Ospedale: '+ospedale+'\tClasse: ',classe, '\ttot samples: ', len(df)) 
+
+
+def print_dataset_counts(dataset):
+    print(accuracy_score(dataset['label'], dataset['label_prediction']))
+    print(confusion_matrix(dataset['label'], dataset['label_prediction']))
+    print('------------------Naples') 
+    dataset_naples = dataset[dataset['ospedale']=='Naples']
+    print(accuracy_score(dataset_naples['label'], dataset_naples['label_prediction']))
+    print(confusion_matrix(dataset_naples['label'], dataset_naples['label_prediction'], normalize='true'))
+    print(confusion_matrix(dataset_naples['label'], dataset_naples['label_prediction']))
+    print('------------------Florence')
+    dataset_florence = dataset[dataset['ospedale']=='Florence']
+    print(accuracy_score(dataset_florence['label'], dataset_florence['label_prediction']))
+    print(confusion_matrix(dataset_florence['label'], dataset_florence['label_prediction'], normalize='true'))
+    print(confusion_matrix(dataset_florence['label'], dataset_florence['label_prediction']))
+    print('------------------Milan')
+    dataset_milan = dataset[dataset['ospedale']=='Milan']
+    print(accuracy_score(dataset_milan['label'], dataset_milan['label_prediction']))
+    print(confusion_matrix(dataset_milan['label'], dataset_milan['label_prediction'], normalize='true'))
+    print(confusion_matrix(dataset_milan['label'], dataset_milan['label_prediction']))
             
             
             
