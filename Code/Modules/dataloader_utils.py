@@ -61,11 +61,11 @@ CV_FOLD = {'BEST': [[1, 2, 68, 75, 85],
 
 train_img_transform = lambda num_rows : A.Compose([
     #input: numpy[(H, W, C)]
+    A.Rotate(limit=10, p=1.0, border_mode=(cv2.BORDER_CONSTANT)),
     A.RandomResizedCrop(height=num_rows, width=NUM_COLUMNS, scale=(0.99, 1.0), ratio=(0.99, 1.01)),
     # A.Resize(height=num_rows, width=NUM_COLUMNS),
     # A.RandomCrop(height=num_rows, width=NUM_COLUMNS),
     A.HorizontalFlip(p=0.5),
-    A.Rotate(limit=10, p=1.0, border_mode=(cv2.BORDER_CONSTANT)),
     A.ColorJitter(.25, .25, p=.5),          #it raise an error for video-mode
     # A.RandomBrightnessContrast(p=0.5),
     ToFloat(max_value=(255)),
