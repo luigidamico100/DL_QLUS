@@ -6,8 +6,8 @@ Created on Thu Sep  9 11:31:40 2021
 @author: luigidamico
 """
 
-from dataloader import dataloader_utils as dataload_ut
-from model import static_model_utils as stat_mod_ut
+import dataloader_utils as dataload_ut
+import static_model_utils as stat_mod_ut
 from config import model_name, num_classes, feature_extract, use_pretrained, device, fold_test_list
 from config import DATASET_PATH, num_workers, batch_size, mode, replicate_all_classes, debug
 from config import regularization, num_epochs, ALLFOLD_MODELS_FOLDER, info_text, MODEL_PATH
@@ -41,18 +41,6 @@ if __name__ == '__main__':
         print('VAL evaluation\t--\t\t{}: {:.2f}\t{}: {:.2f}'.format(str(loss), val_score, str(metric), val_metric))
         print('TEST evaluation\t--\t\t{}: {:.2f}\t{}: {:.2f}'.format(str(loss), test_score, str(metric), test_metric))
         
-        if classification:
-            dataloaders_dict, _ = dataload_ut.get_mat_dataloaders_v2(classification_classes, basePath=DATASET_PATH, num_workers=num_workers, fold_test=fold_test,
-                                                                                       batch_size=batch_size, mode=mode, replicate_all_classes=replicate_all_classes,
-                                                                                       target_value=True)
-            _, train_spearmanCorr = stat_mod_ut.eval_spearmanCorr(model_evaluation, dataloaders_dict['train'], debug=debug)
-            _, val_spearmanCorr = stat_mod_ut.eval_spearmanCorr(model_evaluation, dataloaders_dict['val'], debug=debug)
-            _, test_spearmanCorr = stat_mod_ut.eval_spearmanCorr(model_evaluation, dataloaders_dict['test'], debug=debug)
-            print('TRAIN evaluation\t--\t\tSpearman Corr: {:.2f}'.format(train_spearmanCorr))
-            print('VAL evaluation\t--\t\tSpearman Corr: {:.2f}'.format(val_spearmanCorr))
-            print('TEST evaluation\t--\t\tSpearman Corr: {:.2f}'.format(test_spearmanCorr))
-        
-            
     else:
         print('##################### Evaluating all models in: ' + ALLFOLD_MODELS_FOLDER + ' #####################\n')
         running_outputs = np.empty((0,2))
@@ -87,7 +75,8 @@ if __name__ == '__main__':
         data = np.concatenate((running_outputs, running_outputs_prob, labels_predicted, running_labels, running_targets, running_folds), axis=1)
         dataframe = DataFrame(data=data, columns=('nn_output_label0','nn_output_label1','nn_output_prob_label0','nn_output_prob_label1','label_prediction', 'label','EMOGAS index','fold'))
         information_columns = dataload_ut.get_columns_from_informationdict(running_informations)
-        dataframe['bimbo_name'], dataframe['classe'], dataframe['esame_name'], dataframe['paziente'], dataframe['valore'], dataframe['video_name'], dataframe['processed_video_name'], dataframe['total_clip_frames'] = information_columns
+        dataframe['bimbo_name'], dataframe['classe'], dataframe['esame_name'], dataframe['paziente'], dataframe['valore'], dataframe['video_name'], dataframe['processed_video_name'], dataframe['frame_key'], dataframe['total_clip_frames'], dataframe['keys'] = information_columns
+        dataframe.set_index('keys', inplace=True)
         #############################
 
         ## Save results ##
@@ -98,7 +87,5 @@ if __name__ == '__main__':
         f.write('\nConfusion matrix normalized:\n' + str(aggregate_confusionMatrix_normalized))
         f.close()
         #############################
-        
-        
 
 

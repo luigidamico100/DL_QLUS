@@ -28,18 +28,18 @@ NUM_FRAMES = 6
 
 all_classes = ['BEST', 'RDS', 'TTN']
 
-CV_FOLD = {'BEST': [[1, 2],
-                    [3, 4, 21],
-                    [5, 6],
-                    [7, 8],
-                    [9, 10],
-                    [11, 12, 22],
-                    [13, 14],
-                    [15, 16],
-                    [17, 18],
-                    [19, 20, 23]],
+CV_FOLD = {'BEST': [[1, 2, 68, 75, 85],
+                    [3, 4, 21, 76, 86],
+                    [5, 6, 69, 77, 87],
+                    [7, 8, 70, 78],
+                    [9, 10, 71, 79],
+                    [11, 12, 22, 80],
+                    [13, 14, 72, 81],
+                    [15, 16, 73, 82],
+                    [17, 18, 74, 83],
+                    [19, 20, 23, 84]],
            'RDS': [[24, 33, 51],
-                   [25, 38],
+                   [25, 38, 53],
                    [26, 35, 49],
                    [34, 44, 52],
                    [27, 40, 45],
@@ -61,18 +61,18 @@ CV_FOLD = {'BEST': [[1, 2],
 
 train_img_transform = lambda num_rows : A.Compose([
     #input: numpy[(H, W, C)]
+    A.Rotate(limit=10, p=1.0, border_mode=(cv2.BORDER_CONSTANT)),
     A.RandomResizedCrop(height=num_rows, width=NUM_COLUMNS, scale=(0.99, 1.0), ratio=(0.99, 1.01)),
     # A.Resize(height=num_rows, width=NUM_COLUMNS),
     # A.RandomCrop(height=num_rows, width=NUM_COLUMNS),
     A.HorizontalFlip(p=0.5),
-    A.Rotate(limit=10, p=1.0, border_mode=(cv2.BORDER_CONSTANT)),
-    # A.ColorJitter(.15, .15),          #it raise an error for video-mode
-    A.RandomBrightnessContrast(p=0.2),
+    A.ColorJitter(.25, .25, p=.5),          #it raise an error for video-mode
+    # A.RandomBrightnessContrast(p=0.5),
     ToFloat(max_value=(255)),
     A.Normalize(mean = 0.1250, std = 0.1435, max_pixel_value=1.0),
-    #A.Normalize(mean = 0.5, std = 0.5, max_pixel_value=1.0),
+    # A.Normalize(mean = 0.5, std = 0.5, max_pixel_value=1.0),
     ToTensorV2(),
-    #output: torch.Size([C, H, W])
+    # output: torch.Size([C, H, W])
 ])
 
 test_img_transform = lambda num_rows : A.Compose([
@@ -93,9 +93,15 @@ def default_mat_loader(path, num_rows=NUM_ROWS, return_value=False, mode='fixed_
     matdata = loadmat(path)
     valore = matdata['valore']
         
+    frame_keys = []
     if mode == 'fixed_number_of_frames':
-        data = [matdata[k][:num_rows] for k in matdata.keys() if k.startswith('f') and len(k) < 3]
-        data = data[:NUM_FRAMES]
+        count_frames = 0
+        data = []
+        for k in matdata.keys():
+            if k.startswith('f') and len(k) < 3 and count_frames < NUM_FRAMES:
+                count_frames += 1
+                data.append(matdata[k][:num_rows])
+                frame_keys.append(k)
         data = np.array(data)
     elif mode == 'fixed_number_of_frames_1ch':
         data = [matdata[k][:num_rows] for k in matdata.keys() if k.startswith('f') and len(k) < 3]
@@ -104,23 +110,43 @@ def default_mat_loader(path, num_rows=NUM_ROWS, return_value=False, mode='fixed_
         data = np.delete(data, 0, 3)
         data = np.delete(data, 0, 3)
     elif mode == 'entire_clip':
-        data = [matdata[k][:num_rows] for k in matdata.keys() if k.startswith('f') and len(k) < 3]
+        data = []
+        for k in matdata.keys():
+            if k.startswith('f') and len(k) < 3:
+                data.append(matdata[k][:num_rows])
+                frame_keys.append(k)
         data = np.array(data)
     elif mode == 'random_frame_from_clip' or mode == 'random_frame_from_clip_old':
         f = choice([k for k in matdata.keys() if k.startswith('f') and len(k) < 3])
         data = matdata[f][:num_rows]
 
+    
     if get_information:
-        processed_video_path = path.split('/')
-        information_dit = {
-            'bimbo_name': str(matdata['bimbo_name'][0]),
-            'classe': str(matdata['classe'][0]),
-            'esame_name': str(matdata['esame_name'][0]),
-            'paziente': str(matdata['paziente'][0][0]),
-            'valore': str(matdata['valore'][0][0]),
-            'video_name': str(matdata['video_name'][0]),
-            'processed_video_name': processed_video_path[-2] + '/' + processed_video_path[-1],
-            'total_clip_frames': len(data)
+        if len(frame_keys) > 0:
+            processed_video_path = path.split('/')
+            information_dit = [{
+                'bimbo_name': str(matdata['bimbo_name'][0]),
+                'classe': str(matdata['classe'][0]),
+                'esame_name': str(matdata['esame_name'][0]),
+                'paziente': str(matdata['paziente'][0][0]),
+                'valore': str(matdata['valore'][0][0]),
+                'video_name': str(matdata['video_name'][0]),
+                'processed_video_name': processed_video_path[-2] + '/' + processed_video_path[-1],
+                'frame_key': k, 
+                'total_clip_frames': len(data)
+                } for k in frame_keys]
+        else:
+            processed_video_path = path.split('/')
+            information_dit = {
+                'bimbo_name': str(matdata['bimbo_name'][0]),
+                'classe': str(matdata['classe'][0]),
+                'esame_name': str(matdata['esame_name'][0]),
+                'paziente': str(matdata['paziente'][0][0]),
+                'valore': str(matdata['valore'][0][0]),
+                'video_name': str(matdata['video_name'][0]),
+                'processed_video_name': processed_video_path[-2] + '/' + processed_video_path[-1],
+                'frame_key': 'None', 
+                'total_clip_frames': len(data)
             }
         return data, float(valore.item()/480.), information_dit
     else:
@@ -265,6 +291,10 @@ def show_images(data_loader, batches=10):
 
 def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=False, replicate_minority_classes=True, fold_test=0, fold_val=None, batch_size=32, num_workers=4, replicate_all_classes=10, mode='fixed_number_of_frames',
                            train_samples=True, val_samples=True, test_samples=True, get_information=False):
+    
+    # get_information = get_information if (both_indicies and not train_samples) else False   #This cases have not been implemented
+    get_information = get_information if (both_indicies) else False   #This cases have not been implemented
+    
     print('\n\n---------- Creating datasets and dataloaders ----------')
     if fold_val is None: fold_val = fold_test - 1
     print('Validation fold:', fold_val, ', Test fold:', fold_test)
@@ -283,7 +313,7 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=
                                       exclude_class=exclude_class, num_rows=NUM_ROWS, exclude_val_higher=450 if not target_value and class_name != 'BEST' else None, get_information=get_information))
             print('\t\t- TRAIN n. samples founded: ', len(train_ds[-1]))
             
-        mode_test = 'entire_clip' if mode=='random_frame_from_clip' else mode
+        mode_test = 'fixed_number_of_frames' if mode=='random_frame_from_clip' else mode
         
         if val_samples:
             val_ds.append(LUSFolder(root=basePath, train_phase=False, target_value=target_value, both_indicies=both_indicies, mode=mode_test, subset_in=CV_FOLD[class_name][fold_val],
@@ -317,7 +347,7 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=
                     X += x
                     Y1 += [y1] * len(x)
                     Y2 += [y2] * len(x)
-                    INF += [inf] * len(x)
+                    INF += inf
                 Y1 = torch.Tensor(Y1)
                 Y2 = torch.Tensor(Y2)
                 X = torch.stack(X)
@@ -354,7 +384,7 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=
         
     if mode == 'random_frame_from_clip':
         collate = collate_fn
-        batch_size = math.ceil(batch_size/16)
+        batch_size = math.ceil(batch_size/6)
     else:
         collate = None
         
@@ -381,7 +411,9 @@ def get_columns_from_informationdict(all_informations):
     col_valore = [None] * len(all_informations)
     col_video_name = [None] * len(all_informations)
     col_processed_video_name = [None] * len(all_informations)
+    col_frame_key = [None] * len(all_informations)
     col_total_clip_frames = [None] * len(all_informations)
+    col_keys = [None] * len(all_informations)
 
     for idx, informations in enumerate(all_informations):    
         col_bimbo_name[idx] = informations['bimbo_name']
@@ -391,31 +423,33 @@ def get_columns_from_informationdict(all_informations):
         col_valore[idx] = informations['valore']
         col_video_name[idx] = informations['video_name']
         col_processed_video_name[idx] = informations['processed_video_name']
+        col_frame_key[idx] = informations['frame_key']
         col_total_clip_frames[idx] = informations['total_clip_frames']
+        col_keys[idx] = informations['processed_video_name'] + '\t' + informations['frame_key']
     
-    return col_bimbo_name, col_classe, col_esame_name, col_paziente, col_valore, col_video_name, col_processed_video_name, col_total_clip_frames
+    return col_bimbo_name, col_classe, col_esame_name, col_paziente, col_valore, col_video_name, col_processed_video_name, col_frame_key, col_total_clip_frames, col_keys
 
 
 
 #%%
 classification_classes = ['BEST', 'RDS']
-DATASET_PATH  = '/Volumes/SD Card/ICPR/Dataset_processato/Dataset_f'
+DATASET_PATH  = '/Volumes/SD Card/Thesis/ICPR/Dataset_processato/Dataset_f'
 num_workers = 0
 fold_test = 0
-batch_size = 32
+batch_size = 16
 # Mode to choose from [random_frame_from_clip_old, random_frame_from_clip, fixed_number_of_frames, fixed_number_of_frames_1ch]
 mode = 'random_frame_from_clip'
 replicate_all_classes = 1
 classification = True
 both_indicies = True
-get_information = True if both_indicies else False      # only main value can be change, not the one after the else
+get_information = True
 
 if __name__ == '__main__':
     
     dataloaders_dict, datasets_dict = get_mat_dataloaders_v2(classification_classes, basePath=DATASET_PATH, num_workers=num_workers, fold_test=fold_test,
                                                                                    batch_size=batch_size, mode=mode, replicate_all_classes=replicate_all_classes,
                                                                                    target_value=not classification, both_indicies=both_indicies, get_information=get_information,
-                                                                                   train_samples=False, val_samples=False, test_samples=True)
+                                                                                   train_samples=True, val_samples=False, test_samples=True)
 
 
     # train_dl = dataloaders_dict['train']

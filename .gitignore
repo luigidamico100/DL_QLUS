@@ -137,3 +137,5 @@ Code/model/*
 !Code/model/static_model_utils.py
 Experiments/*
 !Experiments/gitkeep
+Code/analysis/swan-3299528_1280.jpg
+Code/check_modelBest_modelLast_differences.py

@@ -1,0 +1,197 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Sep 10 17:11:42 2021
+
+@author: luigidamico
+"""
+import pandas as pd
+from config import DATASET_RAW_PATH, DATASET_PATH
+import matplotlib.pyplot as plt
+from scipy.io import loadmat
+import pims
+import analysis_util
+import pickle
+import numpy as np
+from sklearn.metrics import confusion_matrix, accuracy_score
+from dataloader_utils import train_img_transform
+from dataloader_utils import NUM_ROWS
+import matplotlib
+
+
+#%% Load dataset
+RESULT_PATH = '/Volumes/SD Card/Thesis/Experiments/experiment_allfold_exp_6/'
+
+DATASET_RESULT_PATH = RESULT_PATH + 'evaluation_dataframe_final.csv'
+dataset_test = pd.read_csv(DATASET_RESULT_PATH, index_col='keys')
+dataset_test['ospedale'] = analysis_util.create_ospedale_column(dataset_test)
+
+(dataset_test_rightPrediction, dataset_test_wrongPrediction), accuracy_test = analysis_util.evaluate_dataset(dataset_test)
+
+dataset_test_rightPrediction_naples = dataset_test_rightPrediction[dataset_test_rightPrediction['ospedale']=='Naples']
+dataset_test_wrongPrediction_naples = dataset_test_wrongPrediction[dataset_test_wrongPrediction['ospedale']=='Naples']
+dataset_test_rightPrediction_milan = dataset_test_rightPrediction[dataset_test_rightPrediction['ospedale']=='Milan']
+dataset_test_wrongPrediction_milan = dataset_test_wrongPrediction[dataset_test_wrongPrediction['ospedale']=='Milan']
+dataset_test_rightPrediction_florence = dataset_test_rightPrediction[dataset_test_rightPrediction['ospedale']=='Florence']
+dataset_test_wrongPrediction_florence = dataset_test_wrongPrediction[dataset_test_wrongPrediction['ospedale']=='Florence']
+
+dataset_test_wrongPrediction_florence_healthy = dataset_test_wrongPrediction_florence[dataset_test_wrongPrediction_florence['label']==0]
+dataset_test_wrongPrediction_florence_RDS = dataset_test_wrongPrediction_florence[dataset_test_wrongPrediction_florence['label']==1]
+dataset_test_wrongPrediction_milan_healthy = dataset_test_wrongPrediction_milan[dataset_test_wrongPrediction_milan['label']==0]
+dataset_test_wrongPrediction_milan_RDS = dataset_test_wrongPrediction_milan[dataset_test_wrongPrediction_milan['label']==1]
+dataset_test_wrongPrediction_naples_RDS = dataset_test_wrongPrediction_naples[dataset_test_wrongPrediction_naples['label']==1]
+
+out_file_folder = RESULT_PATH+ 'figures/'
+
+
+#%% Check extreme correct evaluation
+
+'''
+Healthy (Naples)
+'''
+sample_key = 'BEST/B_23_1_4.mat\tf0'
+img = analysis_util.get_and_save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'NaplesHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=5, show_original_img=True, out_file_path=out_file_folder+'Attribution_NaplesHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+'''
+Healthy (Milan)
+'''
+sample_key = 'BEST/B_86_1_7.mat\tf0'
+analysis_util.get_and_save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'MilanHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=20, show_original_img=True, out_file_path=out_file_folder+'Attribution_MilanHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+'''
+Healthy (Florence)
+'''
+sample_key = 'BEST/B_70_1_2.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'FlorenceHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=20, show_original_img=True, out_file_path=out_file_folder+'Attribution_FlorenceHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+'''
+RDS (Naples)
+'''
+sample_key = 'RDS/R_34_1_3.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'NaplesRDS_'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=20, show_original_img=True, out_file_path=out_file_folder+'Attribution_NaplesRDS_'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+
+'''
+RDS (Milan)
+'''
+sample_key = 'RDS/R_36_1_4.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'MilanRDS_'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=20, show_original_img=True, out_file_path=out_file_folder+'Attribution_MilanRDS_'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+'''
+RDS (Florence)
+'''
+sample_key = 'RDS/R_29_1_5.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'FlorenceRDS_'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=20, show_original_img=True, out_file_path=out_file_folder+'Attribution_FlorenceRDS_'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+
+#%% Metrics for different hospitals
+
+print_metrics(dataset_test)
+
+#%% Showing histories data
+
+analysis_util.show_training_histories_byFold(hists_path='/Users/luigidamico/Desktop/Thesis/Code/My code/repos/DL_QLUS/Experiments/experiment_allfold_exp_5/')
+
+#%% Analysing wrong-predicted frames
+
+'''
+Healthy (Naples)
+'''
+sample_key = 'BEST/B_11_1_1.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'predWrong_NaplesHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=20, show_original_img=True, out_file_path=out_file_folder+'predWrong_Attribution_NaplesHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+
+'''
+Healthy (Florence)
+'''
+sample_key = 'BEST/B_75_1_5.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'predWrong_FlorenceHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=20, show_original_img=True, out_file_path=out_file_folder+'predWrong_Attribution_FlorenceHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+
+'''
+Healthy (Milan)
+'''
+sample_key = 'BEST/B_84_1_5.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'predWrong_MilanHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=20, show_original_img=True, out_file_path=out_file_folder+'predWrong_Attribution_MilanHealthy_'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+'''
+RDS (Naples)
+'''
+sample_key = 'RDS/R_34_2_4.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'predWrong_NaplesRDS_'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=20, show_original_img=True, out_file_path=out_file_folder+'predWrong_Attribution_NaplesRDS_'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+'''
+RDS (Milan)
+'''
+sample_key = 'RDS/R_24_3_5.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'predWrong_MilanRDS_'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=20, show_original_img=True, out_file_path=out_file_folder+'predWrong_Attribution_MilanRDS_'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+
+'''
+RDS (Florence)
+'''
+sample_key = 'RDS/R_40_2_2.mat\tf0'
+analysis_util.save_video_frame(dataset_test, sample_key, out_file_path=out_file_folder+'predWrong_FlorenceRDS_'+sample_key.replace('/','-').replace('\t','')+'.png')
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=20, show_original_img=True, out_file_path=out_file_folder+'predWrong_Attribution_FlorenceRDS_'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+
+#%% Video level
+(dataset_test_videoLevel, dataset_test_videoLevel_rightPredition, dataset_test_videoLevel_wrongPrediction), acc = analysis_util.create_dataset_videoLevel(dataset_test, th=0.5)
+
+print_metrics(dataset_test_videoLevel)
+
+
+#%% Augmentation tests
+sample_key = 'BEST/B_70_1_2.mat\tf0'
+analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', old_transformation=False)
+analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', old_transformation=True)
+
+#%% Folds counts
+
+# dataset_fold = pd.DataFrame(columns=['fold', 'ospedale', 'classe', 'count'])
+
+# for fold in range(0,10):
+#     dataset_test_fold = dataset_test[dataset_test['fold']==fold]
+#     df_fold = analysis_util.create_dataframe_videos(dataset_test_fold)
+#     for ospedale in dataset_test['ospedale'].unique():
+#         df_ospedale = df_fold[df_fold['ospedale']==ospedale]
+#         for classe in dataset_test['classe'].unique():
+#             df_classe = df_ospedale[df_ospedale['classe']==classe]
+#             d = {'fold': fold,
+#                  'ospedale': ospedale,
+#                  'classe': classe,
+#                  'count': len(df_classe),
+#                 }
+#             dataset_fold = dataset_fold.append(d, ignore_index=True)
+            
+
+import seaborn as sns
+dataset_video_test = analysis_util.create_dataframe_video_byFold(dataset_test)
+ax = sns.displot(data=dataset_video_test, x='fold', row='classe', col='ospedale', bins=10)
+ax.savefig('/Volumes/SD Card/Thesis/Experiments/folds stats/folds_stats.jpg',dpi=300)
+
+
+

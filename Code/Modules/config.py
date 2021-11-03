@@ -12,7 +12,8 @@ from torchmetrics import Accuracy, MeanAbsolutePercentageError
 
 on_cuda = torch.cuda.is_available()
 device = torch.device("cuda:0" if on_cuda else "cpu")
-DATASET_PATH = '/mnt/disk2/diego.gragnaniello/Eco/ICPR/Dataset_processato/Dataset_f' if on_cuda else '/Volumes/SD Card/ICPR/Dataset_processato/Dataset_f'
+DATASET_PATH = '/mnt/disk2/diego.gragnaniello/Eco/ICPR/Dataset_processato/Dataset_f' if on_cuda else '/Volumes/SD Card/Thesis/ICPR/Dataset_processato/Dataset_f/'
+DATASET_RAW_PATH = '/mnt/disk2/diego.gragnaniello/Eco/ICPR/Dataset_RAW' if on_cuda else '/Volumes/SD Card/Thesis/ICPR/Dataset_RAW'
 num_workers = 0
 debug = False if on_cuda else True
 
@@ -20,14 +21,15 @@ debug = False if on_cuda else True
 experiment_all_fold = True
 ''' Most common for training'''
 OUTFOLDER_PATH = '../Experiments/exp_9/'     # used in case experiment_all_fold=False
-OUTFOLDER_ALLFOLD_FOLDER = '../Experiments/experiment_allfold_exp_1/'    # used in case experiment_all_fold=True
+OUTFOLDER_ALLFOLD_FOLDER = '../Experiments/experiment_allfold_exp_0/'    # used in case experiment_all_fold=True
 classification = True
-batch_size = 64 if on_cuda else 4
-comment_text = "...."
+batch_size = 32 if on_cuda else 4
+comment_text = "New augmentation, replicate classes=6"
 
 ''' Model evaluation '''
-MODEL_PATH = '../Experiments/experiment_allfold_exp_1/exp_fold_0/model_best.pt'
-ALLFOLD_MODELS_FOLDER = '../Experiments/experiment_allfold_exp_1/'
+fold_test = 1
+MODEL_PATH = '../Experiments/experiment_allfold_exp_7/exp_fold_1/model_best.pt'
+ALLFOLD_MODELS_FOLDER = '../Experiments/experiment_allfold_exp_0/'
 
 
 ''' Problem definition parameters'''
@@ -44,9 +46,8 @@ feature_extract = False     #Set to False to fine-tune the model.
 
 ''' Training parameters'''
 fold_test_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] if on_cuda else [0,1]
-fold_test = 0
-num_epochs = 20 if on_cuda else 2
-replicate_all_classes = 1
+num_epochs = 6 if on_cuda else 3
+replicate_all_classes = 5
 regularization = None
 lr = 1e-4
 

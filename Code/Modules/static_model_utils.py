@@ -49,6 +49,7 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
     train_loss_history = []
     
     best_model_wts = copy.deepcopy(model.state_dict())
+    # last_model_wts = copy.deepcopy(model.state_dict())
     best_loss = 10000.0
 
     for epoch in range(num_epochs):
@@ -95,7 +96,7 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
                     data_loss = criterion(outputs, labels)
                     data_metric = metric(outputs, labels)   # batch metric mean
                     loss = data_loss + reg_lambda * reg_loss
-                    print("\t\tdata_loss: {:.3f}, reg_loss: {:.3f}".format(data_loss, reg_lambda*reg_loss))
+                    # print("\t\tdata_loss: {:.3f}, reg_loss: {:.3f}".format(data_loss, reg_lambda*reg_loss))
 
                     # _, preds = torch.max(outputs, 1)
 
@@ -119,10 +120,9 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
             if phase == 'val' and epoch_loss < best_loss:
                 best_loss = epoch_loss
                 best_model_wts = copy.deepcopy(model.state_dict())
-                # best_outputs = outputs
-                # best_labels = labels
-            if phase == 'val' and epoch == num_epochs-1:
-                last_model_wts = copy.deepcopy(model.state_dict())
+                print('-> Best validation loss!')
+            # if phase == 'val' and epoch == num_epochs-1:
+                # last_model_wts = copy.deepcopy(model.state_dict())
             if phase == 'val':
                 val_metric_history.append(epoch_metric)
                 val_loss_history.append(epoch_loss)
@@ -139,8 +139,8 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
 
     model_best = model
     model_best.load_state_dict(best_model_wts)
-    model_last = model
-    model_last.load_state_dict(last_model_wts)
+    # model_last = model
+    # model_last.load_state_dict(last_model_wts)
        
     train_metric_history = [h.cpu().item() for h in train_metric_history]
     val_metric_history = [h.cpu().item() for h in val_metric_history]
@@ -150,8 +150,8 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
     hist[0] = ((str(criterion)),(train_loss_history, val_loss_history, test_loss_history))
     hist[1] = ((str(metric)),(train_metric_history, val_metric_history, test_metric_history))
     
-    models = (model_last, model_best)
-    return models, hist#, best_outputs, best_labels
+    models = (model_best, model_best)
+    return models, hist
 
 
 def eval_model(model, dataloader, score_fn, metric_fn, debug=False):
@@ -291,7 +291,16 @@ def initialize_model(model_name, classification=False, num_classes=1, feature_ex
         set_parameter_requires_grad(model_ft, feature_extract) #line to test
         num_ftrs = model_ft._fc.in_features
         model_ft._fc = nn.Linear(num_ftrs, num_classes)
-        input_size = None                      # to define
+        input_size = 224
+
+    elif model_name == "efficientnet-b1":
+        """ Efficientnet-b1
+        """
+        model_ft = EfficientNet.from_pretrained(model_name)
+        set_parameter_requires_grad(model_ft, feature_extract) #line to test
+        num_ftrs = model_ft._fc.in_features
+        model_ft._fc = nn.Linear(num_ftrs, num_classes)
+        input_size = 240
 
     elif model_name == "alexnet":
         """ Alexnet
@@ -429,7 +438,7 @@ def plot_and_save(models, hist, out_folder, info_text):
         fig.savefig(out_folder+'history.jpg', dpi=300)
         
         (model_last, model_best) = models
-        torch.save(model_last, out_folder+'model_last.pt')
+        # torch.save(model_last, out_folder+'model_last.pt')
         torch.save(model_best, out_folder+'model_best.pt')
         f = open(out_folder + "info.txt", "w")
         f.write(info_text)
