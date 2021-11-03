@@ -96,7 +96,7 @@ def train_model(model, dataloaders, criterion, metric, optimizer, num_epochs=25,
                     data_loss = criterion(outputs, labels)
                     data_metric = metric(outputs, labels)   # batch metric mean
                     loss = data_loss + reg_lambda * reg_loss
-                    print("\t\tdata_loss: {:.3f}, reg_loss: {:.3f}".format(data_loss, reg_lambda*reg_loss))
+                    # print("\t\tdata_loss: {:.3f}, reg_loss: {:.3f}".format(data_loss, reg_lambda*reg_loss))
 
                     # _, preds = torch.max(outputs, 1)
 

@@ -20,7 +20,7 @@ import matplotlib
 
 
 #%% Load dataset
-RESULT_PATH = '/Volumes/SD Card/Thesis/Experiments/experiment_allfold_exp_5/'
+RESULT_PATH = '/Volumes/SD Card/Thesis/Experiments/experiment_allfold_exp_6/'
 
 DATASET_RESULT_PATH = RESULT_PATH + 'evaluation_dataframe_final.csv'
 dataset_test = pd.read_csv(DATASET_RESULT_PATH, index_col='keys')
@@ -42,12 +42,6 @@ dataset_test_wrongPrediction_milan_RDS = dataset_test_wrongPrediction_milan[data
 dataset_test_wrongPrediction_naples_RDS = dataset_test_wrongPrediction_naples[dataset_test_wrongPrediction_naples['label']==1]
 
 out_file_folder = RESULT_PATH+ 'figures/'
-
-
-#%%
-sample_key = 'BEST/B_70_1_2.mat\tf0'
-analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', old_transformation=False)
-analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', old_transformation=True)
 
 
 #%% Check extreme correct evaluation
@@ -170,13 +164,34 @@ _ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=20, 
 print_metrics(dataset_test_videoLevel)
 
 
+#%% Augmentation tests
+sample_key = 'BEST/B_70_1_2.mat\tf0'
+analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', old_transformation=False)
+analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', old_transformation=True)
 
-#%% Different fold
-dataset_test_fold0 = dataset_test[dataset_test['fold']==0]
-(dataset_test_fold0_rightPrediction, dataset_test_fold0_wrongPrediction), accuracy_test = analysis_util.evaluate_dataset(dataset_test_fold0)
+#%% Folds counts
 
-analysis_util.print_dataframe_stats(dataset_test_fold0)
-analysis_util.print_dataframe_stats(dataset_test_fold0_wrongPrediction)
+# dataset_fold = pd.DataFrame(columns=['fold', 'ospedale', 'classe', 'count'])
+
+# for fold in range(0,10):
+#     dataset_test_fold = dataset_test[dataset_test['fold']==fold]
+#     df_fold = analysis_util.create_dataframe_videos(dataset_test_fold)
+#     for ospedale in dataset_test['ospedale'].unique():
+#         df_ospedale = df_fold[df_fold['ospedale']==ospedale]
+#         for classe in dataset_test['classe'].unique():
+#             df_classe = df_ospedale[df_ospedale['classe']==classe]
+#             d = {'fold': fold,
+#                  'ospedale': ospedale,
+#                  'classe': classe,
+#                  'count': len(df_classe),
+#                 }
+#             dataset_fold = dataset_fold.append(d, ignore_index=True)
+            
+
+import seaborn as sns
+dataset_video_test = analysis_util.create_dataframe_video_byFold(dataset_test)
+ax = sns.displot(data=dataset_video_test, x='fold', row='classe', col='ospedale', bins=10)
+ax.savefig('/Volumes/SD Card/Thesis/Experiments/folds stats/folds_stats.jpg',dpi=300)
 
 
 

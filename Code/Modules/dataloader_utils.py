@@ -433,7 +433,7 @@ def get_columns_from_informationdict(all_informations):
 
 #%%
 classification_classes = ['BEST', 'RDS']
-DATASET_PATH  = '/Volumes/SD Card/ICPR/Dataset_processato/Dataset_f'
+DATASET_PATH  = '/Volumes/SD Card/Thesis/ICPR/Dataset_processato/Dataset_f'
 num_workers = 0
 fold_test = 0
 batch_size = 16
