@@ -287,10 +287,10 @@ def initialize_model(model_name, classification=False, num_classes=1, feature_ex
     elif model_name == "efficientnet-b0":
         """ Efficientnet-b0
         """
-        model_ft = EfficientNet.from_pretrained(model_name)
+        model_ft = EfficientNet.from_pretrained(model_name, num_classes=num_classes)
         set_parameter_requires_grad(model_ft, feature_extract) #line to test
-        num_ftrs = model_ft._fc.in_features
-        model_ft._fc = nn.Linear(num_ftrs, num_classes)
+        #num_ftrs = model_ft._fc.in_features
+        #model_ft._fc = nn.Linear(num_ftrs, num_classes)
         input_size = 224
 
     elif model_name == "efficientnet-b1":
