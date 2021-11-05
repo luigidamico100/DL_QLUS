@@ -166,8 +166,10 @@ print_metrics(dataset_test_videoLevel)
 
 #%% Augmentation tests
 sample_key = 'BEST/B_70_1_2.mat\tf0'
-analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', old_transformation=False)
-analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', old_transformation=True)
+analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', train_transformation=True, old_transformation=False)
+analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', train_transformation=False, old_transformation=False)
+analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', train_transformation=True, old_transformation=True)
+analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', train_transformation=False, old_transformation=True)
 
 #%% Folds counts
 
