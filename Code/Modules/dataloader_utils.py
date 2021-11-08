@@ -59,14 +59,16 @@ CV_FOLD = {'BEST': [[1, 2, 68, 75, 85],
                    [62, 66],
                    [63]]}
 
+
 train_img_transform = lambda num_rows : A.Compose([
     #input: numpy[(H, W, C)]
     A.Rotate(limit=10, p=1.0, border_mode=(cv2.BORDER_CONSTANT)),
-    A.RandomResizedCrop(height=num_rows, width=NUM_COLUMNS, scale=(0.99, 1.0), ratio=(0.99, 1.01)),
+    #A.RandomResizedCrop(height=num_rows, width=NUM_COLUMNS, scale=(0.99, 1.0), ratio=(0.99, 1.01), p=1.),
+    A.RandomResizedCrop(height=num_rows, width=NUM_COLUMNS, scale=(.3, 1.), ratio=(0.8, 1.5), p=1.),     # my augmentation
     # A.Resize(height=num_rows, width=NUM_COLUMNS),
     # A.RandomCrop(height=num_rows, width=NUM_COLUMNS),
     A.HorizontalFlip(p=0.5),
-    A.ColorJitter(.25, .25, p=.5),          #it raise an error for video-mode
+    A.ColorJitter(brightness=.25, contrast=.25, saturation=.0, hue=.0, always_apply=False, p=0.5),          #it raise an error for video-mode
     # A.RandomBrightnessContrast(p=0.5),
     ToFloat(max_value=(255)),
     A.Normalize(mean = 0.1250, std = 0.1435, max_pixel_value=1.0),
