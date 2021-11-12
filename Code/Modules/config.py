@@ -21,15 +21,15 @@ debug = False if on_cuda else True
 experiment_all_fold = True
 ''' Most common for training'''
 OUTFOLDER_PATH = '../Experiments/exp_9/'     # used in case experiment_all_fold=False
-OUTFOLDER_ALLFOLD_FOLDER = '../Experiments/experiment_allfold_exp_0/'    # used in case experiment_all_fold=True
+OUTFOLDER_ALLFOLD_FOLDER = '../Experiments/experiment_allfold_exp_4/'    # used in case experiment_all_fold=True
 classification = True
-batch_size = 32 if on_cuda else 4
-comment_text = "New augmentation, replicate classes=6"
+batch_size = 8 if on_cuda else 4
+comment_text = "My new augmentation, replicate classes=5, efficientnet-b2, A.RandomResizedCrop(height=num_rows+16+20"
 
 ''' Model evaluation '''
 fold_test = 1
 MODEL_PATH = '../Experiments/experiment_allfold_exp_7/exp_fold_1/model_best.pt'
-ALLFOLD_MODELS_FOLDER = '../Experiments/experiment_allfold_exp_0/'
+ALLFOLD_MODELS_FOLDER = '../Experiments/experiment_allfold_exp_4/'
 
 
 ''' Problem definition parameters'''
@@ -38,8 +38,8 @@ mode = 'random_frame_from_clip'
 
 
 ''' Model parameters '''
-# Models to choose from [resnet (11M params), efficientnet-b0 (4M params), alexnet, vgg, squeezenet, densenet, inception]
-model_name = 'efficientnet-b0'
+# Models to choose from [resnet (11M params), efficientnet-b0 (4M params), efficientnet-b2 (7.7M params), alexnet, vgg, squeezenet, densenet, inception]
+model_name = 'efficientnet-b2'
 use_pretrained = True
 feature_extract = False     #Set to False to fine-tune the model.
 

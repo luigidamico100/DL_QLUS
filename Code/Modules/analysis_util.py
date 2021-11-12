@@ -28,6 +28,7 @@ import pickle
 from dataloader_utils import train_img_transform, test_img_transform
 from dataloader_utils_old import train_transform as train_img_transform_old
 from dataloader_utils_old import test_transform as test_img_transform_old
+from sklearn.metrics import confusion_matrix, accuracy_score
 
 #%%
 
@@ -224,15 +225,16 @@ def show_augmentations(dataset, idx, num_aug=2, out_file_path=None, train_transf
         plt.savefig(out_file_path, dpi=300)
 
 
-def show_sample_attribution(dataset, idx, n_steps, show_original_img=True, out_file_path=None):
+def show_sample_attribution(dataset, idx, n_steps, height_size=224, show_original_img=True, input_model_path=None, out_file_path=None):
     n_frame = int(idx[-1])
     sample = dataset.loc[idx]
     fold_test = int(sample['fold'])
     clip_mat_path = DATASET_PATH + '/' + sample['processed_video_name']
     mat_data = dataload_ut.default_mat_loader(clip_mat_path, mode='entire_clip')
     img = mat_data[0][n_frame]
-    input = dataload_ut.test_img_transform(dataload_ut.NUM_ROWS)(image=img)['image'].unsqueeze(dim=0)
-    input_model_path = '../' + ALLFOLD_MODELS_FOLDER + 'exp_fold_{}/'.format(fold_test) + 'model_best.pt'
+    input = dataload_ut.test_img_transform(height_size)(image=img)['image'].unsqueeze(dim=0)
+    print("Input shape for the model: "+ str(input.shape))
+    input_model_path = input_model_path + 'exp_fold_{}/'.format(fold_test) + 'model_best.pt'
     model = torch.load(input_model_path, map_location=device)
     output = model(input)
     output = F.softmax(output, dim=1)
@@ -258,9 +260,10 @@ def show_sample_attribution(dataset, idx, n_steps, show_original_img=True, out_f
                                               sign="positive",
                                               cmap=default_cmap,
                                               show_colorbar=True)
-            
+    # fig.suptitle('Features attribution using Integrated Gradient')
+    fig.set_size_inches(8, 2.9)
     if out_file_path is not None:
-        fig.savefig(out_file_path, dpi=200, transparent=True)
+        fig.savefig(out_file_path, dpi=200, transparent=False, )
     
     return attributions_ig
 
@@ -271,10 +274,10 @@ def show_training_histories_byFold(hists_path='/Users/luigidamico/Desktop/Thesis
         hist_path = hists_path + 'exp_fold_'+str(fold)+'/hist.pkl'
         hist_data = pickle.load(open(hist_path,'rb'))
         epoch_best_valLoss = np.array(hist_data[0][1][1]).argmin()
-        print('hist best val loss: ', hist_data[0][1][1][epoch_best_valLoss])
-        print('hist best test acc: ', hist_data[1][1][2][epoch_best_valLoss])
+        print('hist best val loss: {:.4f}'.format( hist_data[0][1][1][epoch_best_valLoss]))
+        print('hist best test acc: {:.4f} '.format(hist_data[1][1][2][epoch_best_valLoss]))
         print('hist best epoch: ', epoch_best_valLoss+1)
-        print('hist last test acc: ', hist_data[1][1][2][-1])
+        #print('hist last test acc: ', hist_data[1][1][2][-1])
         print()
         
         
