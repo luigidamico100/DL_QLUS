@@ -63,8 +63,8 @@ CV_FOLD = {'BEST': [[1, 2, 68, 75, 85],
 train_img_transform = lambda num_rows : A.Compose([
     #input: numpy[(H, W, C)]
     A.Rotate(limit=10, p=1.0, border_mode=(cv2.BORDER_CONSTANT)),
-    #A.RandomResizedCrop(height=num_rows, width=NUM_COLUMNS, scale=(0.99, 1.0), ratio=(0.99, 1.01), p=1.),
-    A.RandomResizedCrop(height=num_rows, width=NUM_COLUMNS, scale=(.3, 1.), ratio=(0.8, 1.5), p=1.),     # my augmentation
+    # A.RandomResizedCrop(height=num_rows, width=NUM_COLUMNS, scale=(0.99, 1.0), ratio=(0.99, 1.01), p=1.),
+    A.RandomResizedCrop(height=num_rows, width=NUM_COLUMNS, scale=(.6, 1.), ratio=(0.8, 1.5), p=1.),     # my augmentation
     # A.Resize(height=num_rows, width=NUM_COLUMNS),
     # A.RandomCrop(height=num_rows, width=NUM_COLUMNS),
     A.HorizontalFlip(p=0.5),
@@ -188,9 +188,9 @@ class LUSFolder(DatasetFolder):  # eredita da DatasetFolder
 
         if loader is None:
             if train_phase:
-                loader = lambda path: default_mat_loader(path, num_rows, return_value=target_value, mode=mode, get_information=get_information)
+                loader = lambda path: default_mat_loader(path, NUM_ROWS, return_value=target_value, mode=mode, get_information=get_information)
             else:
-                loader = lambda path: default_mat_loader(path, num_rows, return_value=target_value, mode=mode, get_information=get_information)
+                loader = lambda path: default_mat_loader(path, NUM_ROWS, return_value=target_value, mode=mode, get_information=get_information)
         # definisce la funzione che seleziona i file in base a subset_in e subset_out
         assert subset_in is None or subset_out is None  # almeno uno dei due deve essere None
         if subset_in is not None:
@@ -291,7 +291,8 @@ def show_images(data_loader, batches=10):
             break
 
 
-def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=False, replicate_minority_classes=True, fold_test=0, fold_val=None, batch_size=32, num_workers=4, replicate_all_classes=10, mode='fixed_number_of_frames',
+def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=False, replicate_minority_classes=True, fold_test=0, fold_val=None, 
+                           height_size=224, batch_size=32, num_workers=4, replicate_all_classes=10, mode='fixed_number_of_frames',
                            train_samples=True, val_samples=True, test_samples=True, get_information=False):
     
     # get_information = get_information if (both_indicies and not train_samples) else False   #This cases have not been implemented
@@ -312,19 +313,19 @@ def get_mat_dataloaders_v2(classes, basePath, target_value=False, both_indicies=
         
         if train_samples:
             train_ds.append(LUSFolder(root=basePath, train_phase=True, target_value=target_value, both_indicies=both_indicies, mode=mode, subset_out=CV_FOLD[class_name][fold_test] + CV_FOLD[class_name][fold_val],
-                                      exclude_class=exclude_class, num_rows=NUM_ROWS, exclude_val_higher=450 if not target_value and class_name != 'BEST' else None, get_information=get_information))
+                                      exclude_class=exclude_class, num_rows=height_size, exclude_val_higher=450 if not target_value and class_name != 'BEST' else None, get_information=get_information))
             print('\t\t- TRAIN n. samples founded: ', len(train_ds[-1]))
             
         mode_test = 'fixed_number_of_frames' if mode=='random_frame_from_clip' else mode
         
         if val_samples:
             val_ds.append(LUSFolder(root=basePath, train_phase=False, target_value=target_value, both_indicies=both_indicies, mode=mode_test, subset_in=CV_FOLD[class_name][fold_val],
-                                    num_rows=NUM_ROWS, exclude_class=exclude_class, exclude_val_higher=450 if not target_value and class_name != 'BEST' else None, get_information=get_information))
+                                    num_rows=height_size, exclude_class=exclude_class, exclude_val_higher=450 if not target_value and class_name != 'BEST' else None, get_information=get_information))
             print('\t\t- VAL n. samples founded: ', len(val_ds[-1]))
             
         if test_samples:            
             test_ds.append(LUSFolder(root=basePath, train_phase=False, target_value=target_value, both_indicies=both_indicies, mode=mode_test, subset_in=CV_FOLD[class_name][fold_test],
-                                     num_rows=NUM_ROWS, exclude_class=exclude_class, exclude_val_higher=450 if not target_value and class_name != 'BEST' else None, get_information=get_information))
+                                     num_rows=height_size, exclude_class=exclude_class, exclude_val_higher=450 if not target_value and class_name != 'BEST' else None, get_information=get_information))
             print('\t\t- TEST n. samples founded: ', len(test_ds[-1]))            
 
 
