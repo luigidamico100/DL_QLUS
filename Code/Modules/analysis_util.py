@@ -201,6 +201,7 @@ def get_video_frame(dataset, idx, show=True, out_file_path=None):
         plt.axis('off')
         if out_file_path is not None:
             plt.savefig(out_file_path, dpi=100)
+    plt.show()
     return img
     
 
@@ -289,9 +290,12 @@ def print_dataframe_stats(dataframe):
             print('Ospedale: '+ospedale+'\tClasse: ',classe, '\ttot samples: ', len(df)) 
 
 
-def print_dataset_counts(dataset):
+def print_prediction_stats(dataset):
+    print('------------------Overall') 
     print(accuracy_score(dataset['label'], dataset['label_prediction']))
+    print(confusion_matrix(dataset['label'], dataset['label_prediction'], normalize='true'))
     print(confusion_matrix(dataset['label'], dataset['label_prediction']))
+    print('SFindex mean: {} +- {}'.format(dataset['valore'].mean(), dataset['valore'].std()))
     print('------------------Naples') 
     dataset_naples = dataset[dataset['ospedale']=='Naples']
     print(accuracy_score(dataset_naples['label'], dataset_naples['label_prediction']))
