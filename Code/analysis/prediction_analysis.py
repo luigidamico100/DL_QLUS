@@ -104,14 +104,15 @@ _ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_st
 
 #%% Metrics for different hospitals
 
-analysis_util.print_prediction_stats(dataset_test_rightPrediction_BEST)
+analysis_util.print_prediction_stats(dataset_test)
 
 #%% Showing histories data
 
 analysis_util.show_training_histories_byFold(hists_path=RESULT_PATH)
 
-#%% Analysing wrong-predicted frames
-n_steps = 20
+
+#%% Analysing wrong-predicted frames OLD
+n_steps = 10
 
 '''
 Healthy (Naples)
@@ -167,35 +168,102 @@ _ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_st
 
 
 ''' 
-Random
+Naples hospital
 '''
-sample_key = 'BEST/B_2_1_4.mat\tf2'
+
+sample_key = 'BEST/B_2_1_4.mat\tf2'     #Naples
+_ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+sample_key = 'BEST/B_11_1_2.mat\tf5'     #Naples
+_ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+sample_key = 'BEST/B_4_1_9.mat\tf4'     #Naples
+_ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+sample_key = 'RDS/R_51_2_4.mat\tf1'     #Naples
 _ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
 analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
 _ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/'+sample_key.replace('/','-').replace('\t','')+'.png')
 
 
-sample_key = 'RDS/R_24_2_7.mat\tf5'
+sample_key = 'RDS/R_51_2_1.mat\tf5'     #Naples
 _ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
 analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
 _ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/'+sample_key.replace('/','-').replace('\t','')+'.png')
 
-sample_key = 'RDS/R_51_2_4.mat\tf5'
-_ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
-analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
-_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/'+sample_key.replace('/','-').replace('\t','')+'.png')
-
-
-sample_key = 'RDS/R_51_2_1.mat\tf0'
+sample_key = 'RDS/R_33_1_6.mat\tf2'     #Naples
 _ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
 analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
 _ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/'+sample_key.replace('/','-').replace('\t','')+'.png')
 
 
-sample_key = 'RDS/R_24_2_6.mat\tf2'
+'''
+Paziente unpredictable
+'''
+sample_key = 'RDS/R_24_2_7.mat\tf2'     #Milan
 _ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
 analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
-_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/'+sample_key.replace('/','-').replace('\t','')+'.png')
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/unpredictable/'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+sample_key = 'RDS/R_24_3_6.mat\tf2'     #Milan
+_ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/unpredictable/'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+sample_key = 'RDS/R_24_1_1.mat\tf5'     #Milan
+_ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/unpredictable/'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+sample_key = 'RDS/R_24_2_3.mat\tf3'     #Milan
+_ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/unpredictable/'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+sample_key = 'RDS/R_24_3_7.mat\tf4'     #Milan
+_ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/unpredictable/'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+
+sample_key = 'RDS/R_24_2_5.mat\tf4'     #Milan
+_ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/unpredictable/'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+sample_key = 'RDS/R_24_3_1.mat\tf0'     #Milan
+_ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/unpredictable/'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+
+
+'''
+RDS from Florence
+'''
+
+sample_key = 'RDS/R_40_2_1.mat\tf2'     #Florence RDS
+_ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/florenceRDS/'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+sample_key = 'RDS/R_40_2_2.mat\tf3'     #Florence RDS
+_ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/florenceRDS/'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+sample_key = 'RDS/R_47_2_4.mat\tf0'     #Florence RDS
+_ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
+analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
+_ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/florenceRDS/'+sample_key.replace('/','-').replace('\t','')+'.png')
+
+
 
 
 '''
@@ -221,13 +289,21 @@ _ = analysis_util.get_video_frame(dataset_test, sample_key, out_file_path=None)
 analysis_util.analyze_one_video_prediction(dataset_test, sample_key)
 _ = analysis_util.show_sample_attribution(dataset_test, sample_key, n_steps=n_steps, height_size=height_size, show_original_img=True, input_model_path=RESULT_PATH, out_file_path=out_file_folder+'attribution_wrongPrediction/'+sample_key.replace('/','-').replace('\t','')+'.png')
 
-
+BEST/B_85_1_6.mat   #Milan
+RDS/R_34_1_5.mat
+RDS/R_40_2_2.mat
+RDS/R_47_2_4.mat    #Florence
+BEST/B_22_1_5.mat   #Naples
+BEST/B_14_1_4.mat   #naples
+RDS/R_41_2_4.mat    #Florence
 
 
 #%% Video level
 (dataset_test_videoLevel, dataset_test_videoLevel_rightPredition, dataset_test_videoLevel_wrongPrediction), acc = analysis_util.create_dataset_videoLevel(dataset_test, th=0.5)
 
 analysis_util.print_prediction_stats(dataset_test_videoLevel)
+from scipy.stats import spearmanr
+spearmanr(dataset_test_videoLevel['nn_output_prob_label0'], dataset_test_videoLevel['EMOGAS index'])
 
 
 #%% Augmentation tests
@@ -235,8 +311,9 @@ sample_key = 'BEST/B_70_1_2.mat\tf0'
 analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', train_transformation=True, old_transformation=False)
 sample_key = 'RDS/R_36_1_4.mat\tf0'
 analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', train_transformation=True, old_transformation=False)
-analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', train_transformation=False, old_transformation=False)
 analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', train_transformation=True, old_transformation=True)
+analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', train_transformation=False, old_transformation=False)
+
 analysis_util.show_augmentations(dataset_test, sample_key, num_aug=6, out_file_path='/Volumes/SD Card/Thesis/Experiments/augmentation/augmentation_example.jpg', train_transformation=False, old_transformation=True)
 
 

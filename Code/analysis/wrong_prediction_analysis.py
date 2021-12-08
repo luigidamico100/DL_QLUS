@@ -32,12 +32,16 @@ dataset_test['ospedale'] = analysis_util.create_ospedale_column(dataset_test)
 
 #%% Show wrong predictions
     
-for label in dataset_test_wrongPrediction['bimbo_name'].unique():
+df = dataset_test_wrongPrediction_florence
+feature = 'bimbo_name'
+feature = 'processed_video_name'
+for label in df[feature].unique():
     print(label)
-    df = dataset_test_wrongPrediction[dataset_test_wrongPrediction['bimbo_name']==label]
-    idx = df.index[1]
-    print('video_name: ' + dataset_test_wrongPrediction.loc[idx]['processed_video_name'])
-    _ = analysis_util.get_video_frame(dataset_test_wrongPrediction, idx, out_file_path=None)
+    df_ = df[dataset_test_wrongPrediction[feature]==label]
+    idx = df_.index[0]
+    print('video_name: ' + df.loc[idx]['processed_video_name'])
+    print('hospital: ' + df.loc[idx]['ospedale'])
+    _ = analysis_util.get_video_frame(df, idx, out_file_path=None)
     # analysis_util.analyze_one_video_prediction(dataset_test, idx)
     input('...press enter...')
 
