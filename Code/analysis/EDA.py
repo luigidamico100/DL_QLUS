@@ -11,18 +11,18 @@ import pandas as pd
 
 
 #%%
-# analysis_util.create_dataframe_train(out_path='../../Experiments/train_dataset_target_value.csv', target_value=True)
-dataframe_train = pd.read_csv('/Volumes/SD Card/Thesis/Experiments/train_dataset.csv').drop('Unnamed: 0', axis=1)
-dataframe_videos = analysis_util.create_and_save_dataframe_videos(dataframe_train)
-dataframe_patients = analysis_util.create_and_save_dataframe_patients(dataframe_videos)
+train = analysis_util.create_dataframe_train(out_path='../../datasets/dataset_train.csv', target_value=True)
+# dataframe_train = pd.read_csv('/Volumes/SD Card/Thesis/Experiments/train_dataset.csv').drop('Unnamed: 0', axis=1)
+# dataframe_videos = analysis_util.create_and_save_dataframe_videos(dataframe_train)
+# dataframe_patients = analysis_util.create_and_save_dataframe_patients(dataframe_videos)
 
-#%% Sample counting for different hospitals and classes
-print(dataframe_videos['ospedale'].value_counts())
-print(dataframe_videos['classe'].value_counts())
-analysis_util.print_dataframe_stats(dataframe_videos[dataframe_videos['fold']==0])
+# #%% Sample counting for different hospitals and classes
+# print(dataframe_videos['ospedale'].value_counts())
+# print(dataframe_videos['classe'].value_counts())
+# analysis_util.print_dataframe_stats(dataframe_videos[dataframe_videos['fold']==0])
 
 
-print(dataframe_patients['ospedale'].value_counts())
-print(dataframe_patients['classe'].value_counts())
-analysis_util.print_dataframe_stats(dataframe_patients)
+# print(dataframe_patients['ospedale'].value_counts())
+# print(dataframe_patients['classe'].value_counts())
+# analysis_util.print_dataframe_stats(dataframe_patients)
 

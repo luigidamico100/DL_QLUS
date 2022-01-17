@@ -26,7 +26,6 @@ if __name__ == '__main__':
     print(model_ft)
     stat_mod_ut.print_model_parameters(model_ft)
     params_to_update = stat_mod_ut.get_params_to_update(model_ft, feature_extract)
-    # optimizer_ft = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
     optimizer_ft = optim.Adam(params_to_update, lr=lr)
     criterion, metric = config.get_problem_stuff()
     

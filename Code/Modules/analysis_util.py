@@ -63,7 +63,8 @@ def create_dataframe_train(out_path='../../Experiments/train_dataset.csv', targe
             train_dict_info['fold'] = train_dict_info['fold'] + [fold_test] * len(batch[0])
         
     dataframe_train = pd.DataFrame(train_dict_info)
-    dataframe_train.to_csv(out_path)
+    if out_path:
+        dataframe_train.to_csv(out_path)
     return dataframe_train
 
 
