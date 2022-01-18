@@ -21,15 +21,15 @@ debug = False if on_cuda else True
 experiment_all_fold = True
 ''' Most common for training'''
 OUTFOLDER_PATH = '../Experiments/exp_9/'     # used in case experiment_all_fold=False
-OUTFOLDER_ALLFOLD_FOLDER = '../Experiments/experiment_allfold_exp_5/'    # used in case experiment_all_fold=True
+OUTFOLDER_ALLFOLD_FOLDER = '../Experiments/experiment_allfold_exp_Effb1_paperAug2/'    # used in case experiment_all_fold=True
 classification = True
-batch_size = 64 if on_cuda else 4
-comment_text = "My new augmentation, replicate classes=5, efficientnet-b2, A.RandomResizedCrop(height=num_rows+16+20"
+batch_size = 32 if on_cuda else 4
+comment_text = "Eff-b1 with paper augmentation"
 
 ''' Model evaluation '''
 fold_test = 1
 MODEL_PATH = '../Experiments/experiment_allfold_exp_7/exp_fold_1/model_best.pt'
-ALLFOLD_MODELS_FOLDER = '../Experiments/experiment_allfold_exp_5/'
+ALLFOLD_MODELS_FOLDER = '../Experiments/experiment_allfold_exp_Effb1_paperAug2/'
 
 
 ''' Problem definition parameters'''

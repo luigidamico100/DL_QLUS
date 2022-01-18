@@ -59,20 +59,45 @@ CV_FOLD = {'BEST': [[1, 2, 68, 75, 85],
                    [62, 66],
                    [63]]}
 
+''' My aug '''
+
+# train_img_transform = lambda num_rows : A.Compose([
+#     #input: numpy[(H, W, C)]
+#     A.Rotate(limit=10, p=1.0, border_mode=(cv2.BORDER_CONSTANT)),
+#     # A.RandomResizedCrop(height=num_rows, width=NUM_COLUMNS, scale=(0.99, 1.0), ratio=(0.99, 1.01), p=1.),
+#     A.RandomResizedCrop(height=num_rows, width=NUM_COLUMNS, scale=(.6, 1.), ratio=(0.8, 1.5), p=1.),     # my augmentation
+#     # A.Resize(height=num_rows, width=NUM_COLUMNS),
+#     # A.RandomCrop(height=num_rows, width=NUM_COLUMNS),
+#     A.HorizontalFlip(p=0.5),
+#     A.ColorJitter(brightness=.25, contrast=.25, saturation=.0, hue=.0, always_apply=False, p=0.5),          #it raise an error for video-mode
+#     # A.RandomBrightnessContrast(p=0.5),
+#     ToFloat(max_value=(255)),
+#     A.Normalize(mean = 0.1250, std = 0.1435, max_pixel_value=1.0),
+#     # A.Normalize(mean = 0.5, std = 0.5, max_pixel_value=1.0),
+#     ToTensorV2(),
+#     # output: torch.Size([C, H, W])
+# ])
+
+# test_img_transform = lambda num_rows : A.Compose([
+#     #input: numpy[(H, W, C)]
+#     A.Resize(height=num_rows, width=NUM_COLUMNS),
+#     # A.RandomCrop(height=num_rows, width=NUM_COLUMNS),
+#     ToFloat(max_value=(255)),
+#     A.Normalize(mean = 0.1250, std = 0.1435, max_pixel_value=1.0),
+#     ToTensorV2(),
+#     #output: torch.Size([C, H, W])
+# ])
+
+''' Paper aug '''
 
 train_img_transform = lambda num_rows : A.Compose([
     #input: numpy[(H, W, C)]
+    A.RandomResizedCrop(height=240, width=NUM_COLUMNS, scale=(.99, 1.), ratio=(0.99, 1.1), p=1.),
     A.Rotate(limit=10, p=1.0, border_mode=(cv2.BORDER_CONSTANT)),
-    # A.RandomResizedCrop(height=num_rows, width=NUM_COLUMNS, scale=(0.99, 1.0), ratio=(0.99, 1.01), p=1.),
-    A.RandomResizedCrop(height=num_rows, width=NUM_COLUMNS, scale=(.6, 1.), ratio=(0.8, 1.5), p=1.),     # my augmentation
-    # A.Resize(height=num_rows, width=NUM_COLUMNS),
-    # A.RandomCrop(height=num_rows, width=NUM_COLUMNS),
-    A.HorizontalFlip(p=0.5),
     A.ColorJitter(brightness=.25, contrast=.25, saturation=.0, hue=.0, always_apply=False, p=0.5),          #it raise an error for video-mode
-    # A.RandomBrightnessContrast(p=0.5),
+    A.HorizontalFlip(p=0.5),
     ToFloat(max_value=(255)),
-    A.Normalize(mean = 0.1250, std = 0.1435, max_pixel_value=1.0),
-    # A.Normalize(mean = 0.5, std = 0.5, max_pixel_value=1.0),
+    A.Normalize(mean = 0.5, std = 0.5, max_pixel_value=1.0),
     ToTensorV2(),
     # output: torch.Size([C, H, W])
 ])
@@ -82,10 +107,11 @@ test_img_transform = lambda num_rows : A.Compose([
     A.Resize(height=num_rows, width=NUM_COLUMNS),
     # A.RandomCrop(height=num_rows, width=NUM_COLUMNS),
     ToFloat(max_value=(255)),
-    A.Normalize(mean = 0.1250, std = 0.1435, max_pixel_value=1.0),
+    A.Normalize(mean = 0.5, std = 0.5, max_pixel_value=1.0),
     ToTensorV2(),
     #output: torch.Size([C, H, W])
 ])
+
 
 
 #%% Functions
