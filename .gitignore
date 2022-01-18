@@ -139,3 +139,5 @@ Experiments/*
 !Experiments/gitkeep
 Code/analysis/swan-3299528_1280.jpg
 Code/check_modelBest_modelLast_differences.py
+Code/analysis/.DS_Store
+.DS_Store
