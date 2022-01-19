@@ -92,7 +92,7 @@ CV_FOLD = {'BEST': [[1, 2, 68, 75, 85],
 
 train_img_transform = lambda num_rows : A.Compose([
     #input: numpy[(H, W, C)]
-    A.RandomResizedCrop(height=240, width=NUM_COLUMNS, scale=(.99, 1.), ratio=(0.99, 1.1), p=1.),
+    A.RandomResizedCrop(height=240, width=NUM_COLUMNS, scale=(.99, 1.), ratio=(0.99, 1.01), p=1.),
     A.Rotate(limit=10, p=1.0, border_mode=(cv2.BORDER_CONSTANT)),
     A.ColorJitter(brightness=.25, contrast=.25, saturation=.0, hue=.0, always_apply=False, p=0.5),          #it raise an error for video-mode
     A.HorizontalFlip(p=0.5),
